@@ -18,6 +18,30 @@ describe('Helper #appendToContent', function() {
     expect(modifiedTemplate).to.equal(`<div class="foo bar baz"></div>`);
   });
 
+  describe('it can append StringLiterals', function() {
+    let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
+      AttrNode(attr) {
+        attr.value = appendToContent(b, b.string('bar'), attr.value);
+        attr.value = appendToContent(b, b.string('baz'), attr.value);
+        return attr;
+      }
+    });
+
+    expect(modifiedTemplate).to.equal(`<div class="foo bar baz"></div>`);
+  });
+
+  describe('it can append NumberLiterals', function() {
+    let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
+      AttrNode(attr) {
+        attr.value = appendToContent(b, b.number(1), attr.value);
+        attr.value = appendToContent(b, b.number(2), attr.value);
+        return attr;
+      }
+    });
+
+    expect(modifiedTemplate).to.equal(`<div class="foo 1 2"></div>`);
+  });
+
   describe('it can append TextNodes to another TextNode', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode(attr) {
