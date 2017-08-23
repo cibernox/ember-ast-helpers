@@ -47,10 +47,28 @@ describe('Helper #appendToContent', function() {
       AttrNode(attr) {
         attr.value = appendToContent(b, b.mustache(b.path('bar')), attr.value);
         attr.value = appendToContent(b, b.mustache(b.path('baz')), attr.value);
+        attr.value = appendToContent(b, b.mustache(b.path('if'), [b.path('condition'), b.string('yes'), b.string('no')]), attr.value);
         return attr;
       }
     });
 
-    expect(modifiedTemplate).to.equal(`<div class="foo {{bar}} {{baz}}"></div>`);
+    expect(modifiedTemplate).to.equal(`<div class="foo {{bar}} {{baz}} {{if condition "yes" "no"}}"></div>`);
+  });
+
+  describe('it can mix and append a mix of elements', function() {
+    let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
+      AttrNode(attr) {
+        attr.value = appendToContent(b, b.mustache(b.path('one')), b.text(''));
+        attr.value = appendToContent(b, b.mustache(b.path('two')), attr.value);
+        attr.value = appendToContent(b, b.text('three'), attr.value);
+        attr.value = appendToContent(b, 'four', attr.value);
+        attr.value = appendToContent(b, b.path('five'), attr.value);
+        attr.value = appendToContent(b, b.mustache(b.path('if'), [b.path('condition'), b.string('yes'), b.string('no')]), attr.value);
+        attr.value = appendToContent(b, b.path('six'), attr.value);
+        return attr;
+      }
+    });
+
+    expect(modifiedTemplate).to.equal(`<div class="{{one}} {{two}} three four {{five}} {{if condition "yes" "no"}} {{six}}"></div>`);
   });
 });
