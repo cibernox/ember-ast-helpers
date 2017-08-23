@@ -107,4 +107,21 @@ describe('Helper #appendToContent', function() {
 
     expect(modifiedTemplate).to.equal(`<div class="{{one}} {{two}} three four {{five}} {{if condition "yes" "no"}} {{six}}"></div>`);
   });
+
+  describe('it can mix and append a mix of elements without prepending spaces', function() {
+    let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
+      AttrNode(attr) {
+        attr.value = appendToContent(b, b.mustache(b.path('one')), b.text(''), { prependSpace: false });
+        attr.value = appendToContent(b, b.mustache(b.path('two')), attr.value, { prependSpace: false });
+        attr.value = appendToContent(b, b.text('three'), attr.value, { prependSpace: false });
+        attr.value = appendToContent(b, 'four', attr.value, { prependSpace: false });
+        attr.value = appendToContent(b, b.path('five'), attr.value, { prependSpace: false });
+        attr.value = appendToContent(b, b.mustache(b.path('if'), [b.path('condition'), b.string('yes'), b.string('no')]), attr.value, { prependSpace: false });
+        attr.value = appendToContent(b, b.path('six'), attr.value, { prependSpace: false });
+        return attr;
+      }
+    });
+
+    expect(modifiedTemplate).to.equal(`<div class="{{one}}{{two}}threefour{{five}}{{if condition "yes" "no"}}{{six}}"></div>`);
+  });
 });
