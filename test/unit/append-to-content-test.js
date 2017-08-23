@@ -79,6 +79,18 @@ describe('Helper #appendToContent', function() {
     expect(modifiedTemplate).to.equal(`<div class="foo {{bar}} {{baz}} {{if condition "yes" "no"}}"></div>`);
   });
 
+  describe('it can append SubExpressions', function() {
+    let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
+      AttrNode(attr) {
+        attr.value = appendToContent(b, b.sexpr(b.path('some-helper'), [b.string('someArg')]), attr.value);
+        attr.value = appendToContent(b, b.sexpr(b.path('if'), [b.path('condition'), b.string('yes'), b.string('no')]), attr.value);
+        return attr;
+      }
+    });
+
+    expect(modifiedTemplate).to.equal(`<div class="foo {{some-helper "someArg"}} {{if condition "yes" "no"}}"></div>`);
+  });
+
   describe('it can mix and append a mix of elements', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode(attr) {
