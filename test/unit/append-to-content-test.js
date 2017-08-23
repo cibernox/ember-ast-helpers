@@ -6,7 +6,7 @@ const { builders: b } = require('@glimmer/syntax');
 const appendToContent = require('../../lib/helpers/append-to-content');
 
 describe('Helper #appendToContent', function() {
-  describe('it can append regular strings to TextNode', function() {
+  describe('it can append regular strings', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode(attr) {
         attr.value = appendToContent(b, 'bar', attr.value);
@@ -30,11 +30,23 @@ describe('Helper #appendToContent', function() {
     expect(modifiedTemplate).to.equal(`<div class="foo bar baz"></div>`);
   });
 
-  describe('it can append PathExpression to TextNode', function() {
+  describe('it can append PathExpression', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode(attr) {
         attr.value = appendToContent(b, b.path('bar'), attr.value);
         attr.value = appendToContent(b, b.path('baz'), attr.value);
+        return attr;
+      }
+    });
+
+    expect(modifiedTemplate).to.equal(`<div class="foo {{bar}} {{baz}}"></div>`);
+  });
+
+  describe('it can append MustacheStatement', function() {
+    let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
+      AttrNode(attr) {
+        attr.value = appendToContent(b, b.mustache(b.path('bar')), attr.value);
+        attr.value = appendToContent(b, b.mustache(b.path('baz')), attr.value);
         return attr;
       }
     });
