@@ -5,7 +5,7 @@
   "keywords": ["ember", "AST", "helpers", "utils", "handlebars", "transforms"],
   "homepage": "https://github.com/cibernox/ember-ast-helpers",
   "bugs": {
-    "url": "https://github.com/rwjblue/ember-ast-helpers/issues"
+    "url": "https://github.com/cibernox/ember-ast-helpers/issues"
   },
   "license": "MIT",
   "author": "Miguel Camba <miguel.camba@gmail.com>",
