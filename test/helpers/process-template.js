@@ -1,4 +1,4 @@
-const glimmerPrecompile = require('@glimmer/compiler').precompile;
+const syntax = require('@glimmer/syntax');
 
 function buildPlugin(visitor) {
   class Plugin {
@@ -31,13 +31,14 @@ function plugin(Plugin) {
 }
 
 function processTemplate(template, visitor) {
-  return glimmerPrecompile(template, {
+  let newAst = syntax.preprocess(template, {
     rawSource: template,
     moduleName: 'layout.hbs',
     plugins: {
       ast: [ plugin(buildPlugin(visitor)) ]
     }
   });
+  return syntax.print(newAst);
 }
 
 module.exports = processTemplate;
