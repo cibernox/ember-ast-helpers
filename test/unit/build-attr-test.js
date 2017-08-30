@@ -45,4 +45,17 @@ describe('Helper #appendToContent', function() {
 
     expect(modifiedTemplate).to.equal(`<div not-class={{boundValue}}></div>`);
   });
+
+  describe('it builds attrs given a SubExpression', function() {
+    let modifiedTemplate = processTemplate(`{{some-helper title=(concat 'a' 'b')}}`, {
+      MustacheStatement(node) {
+        let title = node.hash.pairs.find((p) => p.key === 'title');
+        if (title !== undefined) {
+          return b.element('div', [buildAttr(b, 'not-class', title.value)]);
+        }
+      }
+    });
+
+    expect(modifiedTemplate).to.equal(`<div not-class={{concat "a" "b"}}></div>`);
+  });
 });
