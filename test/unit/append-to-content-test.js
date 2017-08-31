@@ -2,11 +2,11 @@
 
 const expect = require('chai').expect;
 const processTemplate = require('../helpers/process-template');
-const { builders: b } = require('@glimmer/syntax');
+const b = require('@glimmer/syntax').builders;
 const appendToContent = require('../../lib/helpers/append-to-content');
 
 describe('Helper #appendToContent', function() {
-  describe('it can append regular strings', function() {
+  it('it can append regular strings', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode(attr) {
         attr.value = appendToContent(b, 'bar', attr.value);
@@ -18,7 +18,7 @@ describe('Helper #appendToContent', function() {
     expect(modifiedTemplate).to.equal(`<div class="foo bar baz"></div>`);
   });
 
-  describe('it can append StringLiterals', function() {
+  it('it can append StringLiterals', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode(attr) {
         attr.value = appendToContent(b, b.string('bar'), attr.value);
@@ -30,7 +30,7 @@ describe('Helper #appendToContent', function() {
     expect(modifiedTemplate).to.equal(`<div class="foo bar baz"></div>`);
   });
 
-  describe('it can append NumberLiterals', function() {
+  it('it can append NumberLiterals', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode(attr) {
         attr.value = appendToContent(b, b.number(1), attr.value);
@@ -42,7 +42,7 @@ describe('Helper #appendToContent', function() {
     expect(modifiedTemplate).to.equal(`<div class="foo 1 2"></div>`);
   });
 
-  describe('it can append TextNodes to another TextNode', function() {
+  it('it can append TextNodes to another TextNode', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode(attr) {
         attr.value = appendToContent(b, b.text('bar'), attr.value);
@@ -54,7 +54,7 @@ describe('Helper #appendToContent', function() {
     expect(modifiedTemplate).to.equal(`<div class="foo bar baz"></div>`);
   });
 
-  describe('it can append PathExpression', function() {
+  it('it can append PathExpression', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode(attr) {
         attr.value = appendToContent(b, b.path('bar'), attr.value);
@@ -66,7 +66,7 @@ describe('Helper #appendToContent', function() {
     expect(modifiedTemplate).to.equal(`<div class="foo {{bar}} {{baz}}"></div>`);
   });
 
-  describe('it can append MustacheStatement', function() {
+  it('it can append MustacheStatement', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode(attr) {
         attr.value = appendToContent(b, b.mustache(b.path('bar')), attr.value);
@@ -79,7 +79,7 @@ describe('Helper #appendToContent', function() {
     expect(modifiedTemplate).to.equal(`<div class="foo {{bar}} {{baz}} {{if condition "yes" "no"}}"></div>`);
   });
 
-  describe('it can append SubExpressions', function() {
+  it('it can append SubExpressions', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode(attr) {
         attr.value = appendToContent(b, b.sexpr(b.path('some-helper'), [b.string('someArg')]), attr.value);
@@ -91,7 +91,7 @@ describe('Helper #appendToContent', function() {
     expect(modifiedTemplate).to.equal(`<div class="foo {{some-helper "someArg"}} {{if condition "yes" "no"}}"></div>`);
   });
 
-  describe('it can mix and append a mix of elements', function() {
+  it('it can mix and append a mix of elements', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode(attr) {
         attr.value = appendToContent(b, b.mustache(b.path('one')), b.text(''));
@@ -108,7 +108,7 @@ describe('Helper #appendToContent', function() {
     expect(modifiedTemplate).to.equal(`<div class="{{one}} {{two}} three four {{five}} {{if condition "yes" "no"}} {{six}}"></div>`);
   });
 
-  describe('it can mix and append a mix of elements without prepending spaces', function() {
+  it('it can mix and append a mix of elements without prepending spaces', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode(attr) {
         attr.value = appendToContent(b, b.mustache(b.path('one')), b.text(''), { prependSpace: false });

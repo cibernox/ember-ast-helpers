@@ -1,3 +1,5 @@
+'use strict';
+
 const syntax = require('@glimmer/syntax');
 
 function buildPlugin(visitor) {
