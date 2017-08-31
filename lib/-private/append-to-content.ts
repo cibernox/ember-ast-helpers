@@ -6,7 +6,7 @@ interface AppendOptions {
 }
 
 export type AttrValue = AST.TextNode | AST.MustacheStatement | AST.ConcatStatement;
-export type AttrValueAppendable = AST.PathExpression | AST.SubExpression | AST.TextNode | AST.StringLiteral | AST.NumberLiteral | AST.MustacheStatement | string;
+export type AttrValueAppendable = AST.PathExpression | AST.SubExpression | AST.TextNode | AST.Literal | AST.Literal | AST.MustacheStatement | string;
 
 function appendLiteralToContent(str: string, content: AttrValue, opts: AppendOptions): AttrValue {
   if (content.type === 'TextNode') {
@@ -71,6 +71,12 @@ export default function appendToContent(val: AttrValueAppendable, content: AttrV
     return appendLiteralToContent(val, content, opts);
   }
   switch(val.type) {
+  case 'StringLiteral':
+    content = appendLiteralToContent(val.value, content, opts);
+    break;
+  case 'NumberLiteral':
+    content = appendLiteralToContent(String(val.value), content, opts);
+    break;
   case 'PathExpression':
     content = appendPathToContent(val, content, opts);
     break;
@@ -82,9 +88,6 @@ export default function appendToContent(val: AttrValueAppendable, content: AttrV
     break;
   case 'TextNode':
     content = appendTextNodeToContent(val, content, opts);
-    break;
-  default:
-    content = appendLiteralToContent(String(val.value), content, opts);
     break;
   }
   return content;

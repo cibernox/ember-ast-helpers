@@ -2,7 +2,7 @@
 
 import { builders as b } from '@glimmer/syntax';
 import processTemplate from '../helpers/process-template';
-import appendToContent from '../../lib/helpers/append-to-content';
+import { appendToContent } from '../../lib';
 
 describe('Helper #appendToContent', function() {
   it('it can append regular strings', function() {

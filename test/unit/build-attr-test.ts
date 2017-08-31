@@ -2,7 +2,7 @@
 
 import { builders as b } from '@glimmer/syntax';
 import processTemplate from '../helpers/process-template';
-import buildAttr from '../../lib/helpers/build-attr';
+import { buildAttr } from '../../lib';
 
 describe('Helper #appendToContent', function() {
   it('it builds attrs given a string', function() {
