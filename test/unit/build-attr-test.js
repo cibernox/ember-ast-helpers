@@ -2,7 +2,7 @@
 
 const expect = require('chai').expect;
 const processTemplate = require('../helpers/process-template');
-const { builders: b } = require('@glimmer/syntax');
+const b = require('@glimmer/syntax').builders;
 const buildAttr = require('../../lib/helpers/build-attr');
 
 describe('Helper #appendToContent', function() {
