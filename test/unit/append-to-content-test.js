@@ -1,6 +1,5 @@
 'use strict';
 
-const expect = require('chai').expect;
 const processTemplate = require('../helpers/process-template');
 const b = require('@glimmer/syntax').builders;
 const appendToContent = require('../../lib/helpers/append-to-content');
@@ -15,7 +14,7 @@ describe('Helper #appendToContent', function() {
       }
     });
 
-    expect(modifiedTemplate).to.equal(`<div class="foo bar baz"></div>`);
+    expect(modifiedTemplate).toEqual(`<div class="foo bar baz"></div>`);
   });
 
   it('it can append StringLiterals', function() {
@@ -27,7 +26,7 @@ describe('Helper #appendToContent', function() {
       }
     });
 
-    expect(modifiedTemplate).to.equal(`<div class="foo bar baz"></div>`);
+    expect(modifiedTemplate).toEqual(`<div class="foo bar baz"></div>`);
   });
 
   it('it can append NumberLiterals', function() {
@@ -39,7 +38,7 @@ describe('Helper #appendToContent', function() {
       }
     });
 
-    expect(modifiedTemplate).to.equal(`<div class="foo 1 2"></div>`);
+    expect(modifiedTemplate).toEqual(`<div class="foo 1 2"></div>`);
   });
 
   it('it can append TextNodes to another TextNode', function() {
@@ -51,7 +50,7 @@ describe('Helper #appendToContent', function() {
       }
     });
 
-    expect(modifiedTemplate).to.equal(`<div class="foo bar baz"></div>`);
+    expect(modifiedTemplate).toEqual(`<div class="foo bar baz"></div>`);
   });
 
   it('it can append PathExpression', function() {
@@ -63,7 +62,7 @@ describe('Helper #appendToContent', function() {
       }
     });
 
-    expect(modifiedTemplate).to.equal(`<div class="foo {{bar}} {{baz}}"></div>`);
+    expect(modifiedTemplate).toEqual(`<div class="foo {{bar}} {{baz}}"></div>`);
   });
 
   it('it can append MustacheStatement', function() {
@@ -76,7 +75,7 @@ describe('Helper #appendToContent', function() {
       }
     });
 
-    expect(modifiedTemplate).to.equal(`<div class="foo {{bar}} {{baz}} {{if condition "yes" "no"}}"></div>`);
+    expect(modifiedTemplate).toEqual(`<div class="foo {{bar}} {{baz}} {{if condition "yes" "no"}}"></div>`);
   });
 
   it('it can append SubExpressions', function() {
@@ -88,7 +87,7 @@ describe('Helper #appendToContent', function() {
       }
     });
 
-    expect(modifiedTemplate).to.equal(`<div class="foo {{some-helper "someArg"}} {{if condition "yes" "no"}}"></div>`);
+    expect(modifiedTemplate).toEqual(`<div class="foo {{some-helper "someArg"}} {{if condition "yes" "no"}}"></div>`);
   });
 
   it('it can mix and append a mix of elements', function() {
@@ -105,7 +104,7 @@ describe('Helper #appendToContent', function() {
       }
     });
 
-    expect(modifiedTemplate).to.equal(`<div class="{{one}} {{two}} three four {{five}} {{if condition "yes" "no"}} {{six}}"></div>`);
+    expect(modifiedTemplate).toEqual(`<div class="{{one}} {{two}} three four {{five}} {{if condition "yes" "no"}} {{six}}"></div>`);
   });
 
   it('it can mix and append a mix of elements without prepending spaces', function() {
@@ -122,6 +121,6 @@ describe('Helper #appendToContent', function() {
       }
     });
 
-    expect(modifiedTemplate).to.equal(`<div class="{{one}}{{two}}threefour{{five}}{{if condition "yes" "no"}}{{six}}"></div>`);
+    expect(modifiedTemplate).toEqual(`<div class="{{one}}{{two}}threefour{{five}}{{if condition "yes" "no"}}{{six}}"></div>`);
   });
 });
