@@ -1,7 +1,14 @@
 'use strict';
-import { builders as b } from '@glimmer/syntax';
+import { builders as b, AST } from '@glimmer/syntax';
 
-function appendLiteralToContent(str, content, opts) {
+interface AppendOptions {
+  prependSpace: boolean
+}
+
+export type AttrValue = AST.TextNode | AST.MustacheStatement | AST.ConcatStatement;
+export type AttrValueAppendable = AST.PathExpression | AST.SubExpression | AST.TextNode | AST.StringLiteral | AST.NumberLiteral | AST.MustacheStatement | string;
+
+function appendLiteralToContent(str: string, content: AttrValue, opts: AppendOptions): AttrValue {
   if (content.type === 'TextNode') {
     if (content.chars === '') {
       content.chars = str;
@@ -21,11 +28,11 @@ function appendLiteralToContent(str, content, opts) {
   return content;
 }
 
-function appendTextNodeToContent(textNode, content, opts) {
+function appendTextNodeToContent(textNode: AST.TextNode, content: AttrValue, opts: AppendOptions): AttrValue {
   return appendLiteralToContent(textNode.chars, content, opts);
 }
 
-function appendMustacheToContent(mustache, content, opts) {
+function appendMustacheToContent(mustache: AST.MustacheStatement, content: AttrValue, opts: AppendOptions): AttrValue {
   if (content.type === 'TextNode') {
     if (content.chars !== '') {
       if (opts.prependSpace) {
@@ -51,39 +58,34 @@ function appendMustacheToContent(mustache, content, opts) {
   }
 }
 
-function appendPathToContent(pathExp, content, opts) {
+function appendPathToContent(pathExp: AST.PathExpression, content: AttrValue, opts: AppendOptions): AttrValue {
   return appendMustacheToContent(b.mustache(pathExp), content, opts);
 }
 
-function appendSubExpressionToContent(sexpr, content, opts) {
+function appendSubExpressionToContent(sexpr: AST.SubExpression, content: AttrValue, opts: AppendOptions): AttrValue {
   return appendMustacheToContent(b.mustache(sexpr.path, sexpr.params, sexpr.hash), content, opts);
 }
 
-export default function appendToContent(val, content, opts) {
-  content = content || b.text('');
-  opts = opts || { prependSpace: true };
-  if (val !== undefined) {
-    switch(val.type) {
-    case 'PathExpression':
-      content = appendPathToContent(val, content, opts);
-      break;
-    case 'SubExpression':
-      content = appendSubExpressionToContent(val, content, opts);
-      break;
-    case 'MustacheStatement':
-      content = appendMustacheToContent(val, content, opts);
-      break;
-    case 'TextNode':
-      content = appendTextNodeToContent(val, content, opts);
-      break;
-    case undefined:
-      if (typeof val === 'string') {
-        content = appendLiteralToContent(val, content, opts);
-      }
-      break;
-    default:
-      content = appendLiteralToContent(val.value, content, opts);
-    }
+export default function appendToContent(val: AttrValueAppendable, content: AttrValue = b.text(''), opts = { prependSpace: true }): AttrValue {
+  if (typeof val === 'string') {
+    return appendLiteralToContent(val, content, opts);
+  }
+  switch(val.type) {
+  case 'PathExpression':
+    content = appendPathToContent(val, content, opts);
+    break;
+  case 'SubExpression':
+    content = appendSubExpressionToContent(val, content, opts);
+    break;
+  case 'MustacheStatement':
+    content = appendMustacheToContent(val, content, opts);
+    break;
+  case 'TextNode':
+    content = appendTextNodeToContent(val, content, opts);
+    break;
+  default:
+    content = appendLiteralToContent(String(val.value), content, opts);
+    break;
   }
   return content;
 }
