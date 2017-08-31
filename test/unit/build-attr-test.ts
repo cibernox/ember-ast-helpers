@@ -1,14 +1,14 @@
 'use strict';
 
-const processTemplate = require('../helpers/process-template');
-const b = require('@glimmer/syntax').builders;
-const buildAttr = require('../../lib/helpers/build-attr');
+import { builders as b } from '@glimmer/syntax';
+import processTemplate from '../helpers/process-template';
+import buildAttr from '../../lib/helpers/build-attr';
 
 describe('Helper #appendToContent', function() {
   it('it builds attrs given a string', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode() {
-        return buildAttr(b, 'not-class', 'new content');
+        return buildAttr('not-class', 'new content');
       }
     });
 
@@ -18,7 +18,7 @@ describe('Helper #appendToContent', function() {
   it('it builds attrs given a TextNode', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode() {
-        return buildAttr(b, 'not-class', b.text('new content'));
+        return buildAttr('not-class', b.text('new content'));
       }
     });
 
@@ -28,7 +28,7 @@ describe('Helper #appendToContent', function() {
   it('it builds attrs given a StringLiteral', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode() {
-        return buildAttr(b, 'not-class', b.string('new content'));
+        return buildAttr('not-class', b.string('new content'));
       }
     });
 
@@ -38,7 +38,7 @@ describe('Helper #appendToContent', function() {
   it('it builds attrs given a PathExpression', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode() {
-        return buildAttr(b, 'not-class', b.path('boundValue'));
+        return buildAttr('not-class', b.path('boundValue'));
       }
     });
 
@@ -50,7 +50,7 @@ describe('Helper #appendToContent', function() {
       MustacheStatement(node) {
         let title = node.hash.pairs.find((p) => p.key === 'title');
         if (title !== undefined) {
-          return b.element('div', [buildAttr(b, 'not-class', title.value)]);
+          return b.element('div', [buildAttr('not-class', title.value)]);
         }
       }
     });

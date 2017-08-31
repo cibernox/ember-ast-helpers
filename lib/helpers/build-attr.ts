@@ -1,7 +1,8 @@
-/* eslint-env node */
 'use strict';
 
-function buildAttr(b, name, content) {
+import { builders as b, AST } from '@glimmer/syntax';
+
+export default function buildAttr(name: string, content): AST.AttrNode {
   if (content.type === 'PathExpression') {
     return b.attr(name, b.mustache(content));
   } else if (content.type === 'SubExpression') {
@@ -14,5 +15,3 @@ function buildAttr(b, name, content) {
     return b.attr(name, content);
   }
 }
-
-module.exports = buildAttr;
