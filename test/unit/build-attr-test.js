@@ -6,7 +6,7 @@ const { builders: b } = require('@glimmer/syntax');
 const buildAttr = require('../../lib/helpers/build-attr');
 
 describe('Helper #appendToContent', function() {
-  describe('it builds attrs given a string', function() {
+  it('it builds attrs given a string', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode() {
         return buildAttr(b, 'not-class', 'new content');
@@ -16,7 +16,7 @@ describe('Helper #appendToContent', function() {
     expect(modifiedTemplate).to.equal(`<div not-class="new content"></div>`);
   });
 
-  describe('it builds attrs given a TextNode', function() {
+  it('it builds attrs given a TextNode', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode() {
         return buildAttr(b, 'not-class', b.text('new content'));
@@ -26,7 +26,7 @@ describe('Helper #appendToContent', function() {
     expect(modifiedTemplate).to.equal(`<div not-class="new content"></div>`);
   });
 
-  describe('it builds attrs given a StringLiteral', function() {
+  it('it builds attrs given a StringLiteral', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode() {
         return buildAttr(b, 'not-class', b.string('new content'));
@@ -36,7 +36,7 @@ describe('Helper #appendToContent', function() {
     expect(modifiedTemplate).to.equal(`<div not-class="new content"></div>`);
   });
 
-  describe('it builds attrs given a PathExpression', function() {
+  it('it builds attrs given a PathExpression', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode() {
         return buildAttr(b, 'not-class', b.path('boundValue'));
@@ -46,7 +46,7 @@ describe('Helper #appendToContent', function() {
     expect(modifiedTemplate).to.equal(`<div not-class={{boundValue}}></div>`);
   });
 
-  describe('it builds attrs given a SubExpression', function() {
+  it('it builds attrs given a SubExpression', function() {
     let modifiedTemplate = processTemplate(`{{some-helper title=(concat 'a' 'b')}}`, {
       MustacheStatement(node) {
         let title = node.hash.pairs.find((p) => p.key === 'title');
