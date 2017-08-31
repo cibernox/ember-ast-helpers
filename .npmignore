@@ -3,6 +3,7 @@
 /lib
 /bin
 /docs
+/dist/tests
 **/.gitkeep
 .bowerrc
 .editorconfig
