@@ -39,6 +39,7 @@
     "glob": "^7.0.0",
     "jest": "^20.0.4",
     "tslint": "^5.7.0",
+    "simple-html-tokenizer": "^0.4.1",
     "typescript": "^2.5.2"
   },
   "engines": {

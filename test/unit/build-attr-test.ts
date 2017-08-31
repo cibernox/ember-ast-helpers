@@ -35,15 +35,41 @@ describe('Helper #appendToContent', function() {
     expect(modifiedTemplate).toEqual(`<div not-class="new content"></div>`);
   });
 
-  // it('it builds attrs given a BooleanLiteral', function() {
-  //   let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
-  //     AttrNode() {
-  //       return buildAttr('not-class', b.boolean(true));
-  //     }
-  //   });
-  //   debugger;
-  //   expect(modifiedTemplate).toEqual(`<div not-class="new content"></div>`);
-  // });
+  it('it builds attrs given a BooleanLiteral', function() {
+    let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
+      AttrNode() {
+        return buildAttr('not-class', b.boolean(true));
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div not-class=""></div>`);
+
+    modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
+      AttrNode() {
+        return buildAttr('not-class', b.boolean(false));
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div></div>`);
+  });
+
+  it('it builds attrs given a NumberLiteral', function() {
+    let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
+      AttrNode() {
+        return buildAttr('not-class', b.number(2));
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div not-class="2"></div>`);
+
+    modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
+      AttrNode() {
+        return buildAttr('not-class', b.boolean(false));
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div></div>`);
+  });
 
   it('it builds attrs given a PathExpression', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
@@ -60,7 +86,12 @@ describe('Helper #appendToContent', function() {
       MustacheStatement(node) {
         let title = node.hash.pairs.filter((p) => p.key === 'title')[0];
         if (title !== undefined) {
-          return b.element('div', [buildAttr('not-class', title.value)]);
+          let attrs = [];
+          let attr = buildAttr('not-class', title.value);
+          if (attr) {
+            attrs.push(attr)
+          }
+          return b.element('div', attrs);
         }
       }
     });
