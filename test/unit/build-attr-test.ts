@@ -35,6 +35,16 @@ describe('Helper #appendToContent', function() {
     expect(modifiedTemplate).toEqual(`<div not-class="new content"></div>`);
   });
 
+  // it('it builds attrs given a BooleanLiteral', function() {
+  //   let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
+  //     AttrNode() {
+  //       return buildAttr('not-class', b.boolean(true));
+  //     }
+  //   });
+  //   debugger;
+  //   expect(modifiedTemplate).toEqual(`<div not-class="new content"></div>`);
+  // });
+
   it('it builds attrs given a PathExpression', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode() {
@@ -48,7 +58,7 @@ describe('Helper #appendToContent', function() {
   it('it builds attrs given a SubExpression', function() {
     let modifiedTemplate = processTemplate(`{{some-helper title=(concat 'a' 'b')}}`, {
       MustacheStatement(node) {
-        let title = node.hash.pairs.find((p) => p.key === 'title');
+        let title = node.hash.pairs.filter((p) => p.key === 'title')[0];
         if (title !== undefined) {
           return b.element('div', [buildAttr('not-class', title.value)]);
         }

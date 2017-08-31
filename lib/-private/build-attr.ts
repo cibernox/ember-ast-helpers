@@ -2,7 +2,10 @@
 
 import { builders as b, AST } from '@glimmer/syntax';
 
-export default function buildAttr(name: string, content): AST.AttrNode {
+export type AttrValue = AST.TextNode | AST.MustacheStatement | AST.ConcatStatement;
+export type CoherzableToAttrValue = AttrValue | AST.PathExpression | AST.SubExpression | AST.Literal;
+
+export default function buildAttr(name: string, content: CoherzableToAttrValue): AST.AttrNode {
   if (content.type === 'PathExpression') {
     return b.attr(name, b.mustache(content));
   } else if (content.type === 'SubExpression') {

@@ -38,7 +38,6 @@
     "eslint-plugin-node": "^5.1.0",
     "glob": "^7.0.0",
     "jest": "^20.0.4",
-    "ts-jest": "^20.0.13",
     "tslint": "^5.7.0",
     "typescript": "^2.5.2"
   },
@@ -50,11 +49,8 @@
       "ts",
       "js"
     ],
-    "transform": {
-      "\\.ts$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
-    },
     "testMatch": [
-      "<rootDir>/test/**/*-test.ts"
+      "<rootDir>/dist/test/**/*-test.js"
     ]
   }
 }

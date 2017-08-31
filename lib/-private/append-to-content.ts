@@ -1,11 +1,11 @@
 'use strict';
 import { builders as b, AST } from '@glimmer/syntax';
+import { AttrValue } from './build-attr';
 
 interface AppendOptions {
   prependSpace: boolean
 }
 
-export type AttrValue = AST.TextNode | AST.MustacheStatement | AST.ConcatStatement;
 export type AttrValueAppendable = AST.PathExpression | AST.SubExpression | AST.TextNode | AST.Literal | AST.Literal | AST.MustacheStatement | string;
 
 function appendLiteralToContent(str: string, content: AttrValue, opts: AppendOptions): AttrValue {
