@@ -10,7 +10,8 @@ export interface BuildTimeComponentOptions {
   classNames: string[]
   ariaHidden: boolean
   title: string | undefined | null
-  ariaLabel: string | undefined | null
+  ariaLabel: string | undefined | null,
+  classNameBindings: string[]
 }
 
 const defaultOptions = {
@@ -18,16 +19,18 @@ const defaultOptions = {
   classNames: [],
   ariaHidden: false,
   title: undefined,
-  ariaLabel: undefined
+  ariaLabel: undefined,
+  classNameBindings: []
 }
 
 export default class BuildTimeComponent {
   node: AST.MustacheStatement
   options: BuildTimeComponentOptions
 
-  constructor(node: AST.MustacheStatement, options: object = {}) {
+  constructor(node: AST.MustacheStatement, options: {[key: string]: any} = {}) {
     this.node = node;
     this.options = Object.assign({}, defaultOptions, options);
+    this.options.classNameBindings = defaultOptions.classNameBindings.concat(options.classNameBindings || []);
   }
 
   get tagName(): string {

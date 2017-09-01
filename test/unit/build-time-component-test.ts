@@ -90,6 +90,113 @@ describe('BuildTimeComponent', function() {
     expect(modifiedTemplate).toEqual(`<div class="foo bar {{concat "a" "b"}}"></div>`);
   });
 
+  // classNameBindings
+  it('transform boolean literals to class names', function() {
+    let modifiedTemplate = processTemplate(`{{my-component isActive=true}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new BuildTimeComponent(node, { classNameBindings: ['isActive'] });
+          return component.toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div class="is-active"></div>`);
+
+    modifiedTemplate = processTemplate(`{{my-component isActive=false}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new BuildTimeComponent(node, { classNameBindings: ['isActive'] });
+          return component.toNode();
+        }
+      }
+    });
+    expect(modifiedTemplate).toEqual(`<div></div>`);
+  });
+
+  it('transform paths to class names', function() {
+    let modifiedTemplate = processTemplate(`{{my-component isActive=isActive}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new BuildTimeComponent(node, { classNameBindings: ['isActive'] });
+          return component.toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div class={{if isActive "is-active"}}></div>`);
+  });
+
+  it('accepts colon syntax to bind attributes to custom classes', function() {
+    let modifiedTemplate = processTemplate(`{{my-component isActive=true}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new BuildTimeComponent(node, { classNameBindings: ['isActive:on-duty'] });
+          return component.toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div class="on-duty"></div>`);
+
+    modifiedTemplate = processTemplate(`{{my-component isActive=false}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new BuildTimeComponent(node, { classNameBindings: ['isActive:on-duty'] });
+          return component.toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div></div>`);
+
+    modifiedTemplate = processTemplate(`{{my-component isActive=isActive}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new BuildTimeComponent(node, { classNameBindings: ['isActive:on-duty'] });
+          return component.toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div class={{if isActive 'on-duty'}}></div>`);
+  });
+
+  it('accepts colon syntax to bind attributes to custom classes and its opposite', function() {
+    let modifiedTemplate = processTemplate(`{{my-component isActive=true}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new BuildTimeComponent(node, { classNameBindings: ['isActive:on-duty:reservist'] });
+          return component.toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div class="on-duty"></div>`);
+
+    modifiedTemplate = processTemplate(`{{my-component isActive=false}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new BuildTimeComponent(node, { classNameBindings: ['isActive:on-duty:reservist'] });
+          return component.toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div></div>`);
+
+    modifiedTemplate = processTemplate(`{{my-component isActive=isActive}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new BuildTimeComponent(node, { classNameBindings: ['isActive:on-duty:reservist'] });
+          return component.toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div class={{if isActive 'on-duty'}}></div>`);
+  });
+
   // ariaHidden
   it('honors the default ariaHidden passed to the constructor', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
