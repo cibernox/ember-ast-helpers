@@ -125,4 +125,76 @@ describe('BuildTimeComponent', function() {
 
     expect(modifiedTemplate).toEqual(`<div aria-hidden={{if boundValue "true"}}></div>`);
   });
+
+  // ariaLabel
+  it('honors the default ariaLabel passed to the constructor', function() {
+    let modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        let component = new BuildTimeComponent(node, { ariaLabel: 'sample ariaLabel' });
+        return component.toNode();
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div aria-label="sample ariaLabel"></div>`);
+  });
+
+  it('the boolean passed to ariaLabel trumps over the default value', function() {
+    let modifiedTemplate = processTemplate(`{{my-component ariaLabel="other ariaLabel"}}`, {
+      MustacheStatement(node) {
+        let component = new BuildTimeComponent(node, { ariaLabel: 'sample ariaLabel' });
+        return component.toNode();
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div aria-label="other ariaLabel"></div>`);
+  });
+
+  it('the path passed to ariaLabel trumps over the default value', function() {
+    let modifiedTemplate = processTemplate(`{{my-component ariaLabel=boundValue}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new BuildTimeComponent(node, { ariaLabel: true });
+          return component.toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div aria-label={{boundValue}}></div>`);
+  });
+
+  // title
+  it('honors the default title passed to the constructor', function() {
+    let modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        let component = new BuildTimeComponent(node, { title: 'sample title' });
+        return component.toNode();
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div title="sample title"></div>`);
+  });
+
+  it('the boolean passed to title trumps over the default value', function() {
+    let modifiedTemplate = processTemplate(`{{my-component title="other title"}}`, {
+      MustacheStatement(node) {
+        let component = new BuildTimeComponent(node, { title: 'sample title' });
+        return component.toNode();
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div title="other title"></div>`);
+  });
+
+  it('the path passed to title trumps over the default value', function() {
+    let modifiedTemplate = processTemplate(`{{my-component title=boundValue}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new BuildTimeComponent(node, { title: true });
+          return component.toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div title={{boundValue}}></div>`);
+  });
 });
