@@ -1,6 +1,6 @@
 'use strict';
 
-import { builders as b } from '@glimmer/syntax';
+import { builders as b, AST } from '@glimmer/syntax';
 import processTemplate from '../helpers/process-template';
 import { buildAttr } from '../../lib';
 
@@ -97,5 +97,19 @@ describe('Helper #appendToContent', function() {
     });
 
     expect(modifiedTemplate).toEqual(`<div not-class={{concat "a" "b"}}></div>`);
+  });
+
+  it('it builds attrs given a ConcatStatement without superfluous quotes', function() {
+    let modifiedTemplate = processTemplate(`{{some-helper}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'some-helper') {
+          let condition = b.mustache(b.path('if'), [b.path('cond'), b.string('yes'), b.string('no')]);
+          let attr = <AST.AttrNode> buildAttr('not-class', b.concat([condition]));;
+          return b.element('div', [attr]);
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div not-class={{if cond "yes" "no"}}></div>`);
   });
 });
