@@ -5,16 +5,16 @@ import {
   AST
 } from '@glimmer/syntax';
 
-export interface BuildTimeComponentOptions {
+export type BuildTimeComponentOptions = {
   tagName: string
   classNames: string[]
   ariaHidden: boolean
   title: string | undefined | null
-  ariaLabel: string | undefined | null,
+  ariaLabel: string | undefined | null
   classNameBindings: string[]
 }
 
-const defaultOptions = {
+const defaultOptions : BuildTimeComponentOptions = {
   tagName: 'div',
   classNames: [],
   ariaHidden: false,
@@ -27,7 +27,7 @@ export default class BuildTimeComponent {
   node: AST.MustacheStatement
   options: BuildTimeComponentOptions
 
-  constructor(node: AST.MustacheStatement, options: {[key: string]: any} = {}) {
+  constructor(node: AST.MustacheStatement, options: Partial<BuildTimeComponentOptions> = {}) {
     this.node = node;
     this.options = Object.assign({}, defaultOptions, options);
     this.options.classNameBindings = defaultOptions.classNameBindings.concat(options.classNameBindings || []);

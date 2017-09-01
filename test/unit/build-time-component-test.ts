@@ -260,7 +260,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component ariaLabel=boundValue}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, { ariaLabel: true });
+          let component = new BuildTimeComponent(node, { ariaLabel: 'default aria label' });
           return component.toNode();
         }
       }
@@ -296,7 +296,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component title=boundValue}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, { title: true });
+          let component = new BuildTimeComponent(node, { title: 'default title' });
           return component.toNode();
         }
       }
