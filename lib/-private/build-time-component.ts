@@ -58,7 +58,7 @@ export default class BuildTimeComponent {
   get attrs(): AST.AttrNode[] {
     let attrs: AST.AttrNode[] = [];
     this.options.attributeBindings.forEach((binding) => {
-      let [propName, attrName] = binding.split(':');
+      let [propName, attrName, valueWhenTrue] = binding.split(':');
       attrName = attrName || propName;
       let attrContent;
       if (this[`${propName}Content`]) {
@@ -74,6 +74,8 @@ export default class BuildTimeComponent {
               attrContent = defaultValue;
             }
           }
+        } else if (pair.value.type === 'PathExpression' && valueWhenTrue) {
+          attrContent = b.mustache(b.path('if'), [pair.value, b.string(valueWhenTrue)])
         } else {
           attrContent = pair.value;
         }

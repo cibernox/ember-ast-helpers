@@ -241,6 +241,22 @@ describe('BuildTimeComponent', function() {
     expect(modifiedTemplate).toEqual(`<div aria-hidden={{boundValue}}></div>`);
   });
 
+  it('the path passed to ariaHidden trumps over the default value and uses the true value when provided', function() {
+    let modifiedTemplate = processTemplate(`{{my-component ariaHidden=boundValue}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new BuildTimeComponent(node, {
+            ariaHidden: true,
+            attributeBindings: ['ariaHidden:aria-hidden:secret']
+          });
+          return component.toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div aria-hidden={{if boundValue "secret"}}></div>`);
+  });
+
   // ariaLabel
   it('honors the default ariaLabel passed to the constructor', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
