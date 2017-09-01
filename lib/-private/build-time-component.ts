@@ -5,13 +5,21 @@ import {
   AST
 } from '@glimmer/syntax';
 
+function dashify(str: string): string {
+  str = str.replace(/([a-z])([A-Z])/g, '$1-$2');
+  str = str.replace(/[ \t\W]/g, '-');
+  str = str.replace(/^-+|-+$/g, '');
+  return str.toLowerCase();
+};
+
 export type BuildTimeComponentOptions = {
   tagName: string
   classNames: string[]
   ariaHidden: boolean
   title: string | undefined | null
   ariaLabel: string | undefined | null
-  classNameBindings: string[]
+  classNameBindings: string[],
+  [key: string]: any
 }
 
 const defaultOptions : BuildTimeComponentOptions = {
@@ -50,7 +58,7 @@ export default class BuildTimeComponent {
   }
 
   classAttr(): AST.AttrNode | null {
-    let content;
+    let content: AST.TextNode | AST.MustacheStatement | AST.ConcatStatement | undefined;
     if (this.options.classNames.length > 0) {
       content = appendToContent(this.options.classNames.join(' '), content)
     }
@@ -58,6 +66,33 @@ export default class BuildTimeComponent {
     if (classPair !== undefined) {
       content = appendToContent(classPair.value, content);
     }
+    this.options.classNameBindings.forEach((binding) => {
+      let bindingParts = binding.split(':');
+      if (bindingParts.length === 1) {
+        bindingParts.push(dashify(bindingParts[0]));
+      }
+      let [propName, truthyClass, falsyClass] = bindingParts;
+      let pair = this.node.hash.pairs.find((p) => p.key === propName);
+      if (pair === undefined) {
+        if (!!this.options[propName]) {
+          content = appendToContent(truthyClass, content);
+        } else if (falsyClass) {
+          content = appendToContent(falsyClass, content);
+        }
+      } else if (AST.isLiteral(pair.value)) {
+        if (!!pair.value.value) {
+          content = appendToContent(truthyClass, content);
+        } else if (falsyClass) {
+          content = appendToContent(falsyClass, content);
+        }
+      } else {
+        let mustacheArgs = [pair.value, b.string(truthyClass)];
+        if (falsyClass) {
+          mustacheArgs.push(b.string(falsyClass));
+        }
+        content = appendToContent(b.mustache(b.path('if'), mustacheArgs), content);
+      }
+    });
     return buildAttr('class', content);
   }
 

@@ -5,7 +5,7 @@ import processTemplate from '../helpers/process-template';
 import { BuildTimeComponent } from '../../lib';
 
 describe('BuildTimeComponent', function() {
-  // tagName
+  // // tagName
   it('generates a div by default', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
@@ -159,7 +159,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div class={{if isActive 'on-duty'}}></div>`);
+    expect(modifiedTemplate).toEqual(`<div class={{if isActive "on-duty"}}></div>`);
   });
 
   it('accepts colon syntax to bind attributes to custom classes and its opposite', function() {
@@ -183,7 +183,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div></div>`);
+    expect(modifiedTemplate).toEqual(`<div class="reservist"></div>`);
 
     modifiedTemplate = processTemplate(`{{my-component isActive=isActive}}`, {
       MustacheStatement(node) {
@@ -194,7 +194,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div class={{if isActive 'on-duty'}}></div>`);
+    expect(modifiedTemplate).toEqual(`<div class={{if isActive "on-duty" "reservist"}}></div>`);
   });
 
   // ariaHidden

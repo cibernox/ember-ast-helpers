@@ -22,6 +22,11 @@ export default function buildAttr(name: string, content: CoherzableToAttrValue):
     return b.attr(name, b.text(String(content.value)));
   } else if (content.type === 'NullLiteral' || content.type === 'UndefinedLiteral') {
     return null;
+  } else if (content.type === 'ConcatStatement') {
+    if (content.parts.length === 1) {
+      return buildAttr(name, content.parts[0]);
+    }
+    return b.attr(name, content);
   } else {
     return b.attr(name, content);
   }
