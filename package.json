@@ -1,6 +1,6 @@
 {
   "name": "ember-ast-helpers",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Utility belt to level-up your Ember AST transforms",
   "keywords": [
     "ember",
