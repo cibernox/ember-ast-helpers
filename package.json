@@ -25,7 +25,7 @@
   "scripts": {
     "prepublish": "npm run build",
     "build": "tsc",
-    "test": "jest",
+    "test": "tsc && jest",
     "test:coverage": "jest --coverage",
     "test:watch": "jest --watchAll --notify"
   },

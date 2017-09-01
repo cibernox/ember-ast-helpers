@@ -3,10 +3,12 @@
 import { builders as b, AST } from '@glimmer/syntax';
 
 export type AttrValue = AST.TextNode | AST.MustacheStatement | AST.ConcatStatement;
-export type CoherzableToAttrValue = AttrValue | AST.PathExpression | AST.SubExpression | AST.Literal | string;
+export type CoherzableToAttrValue = AttrValue | AST.PathExpression | AST.SubExpression | AST.Literal | string | undefined;
 
 export default function buildAttr(name: string, content: CoherzableToAttrValue): AST.AttrNode | null {
-  if (typeof content === 'string') {
+  if (content === undefined) {
+    return null;
+  } else if (typeof content === 'string') {
     return b.attr(name, b.text(content));
   } else if (content.type === 'PathExpression') {
     return b.attr(name, b.mustache(content));
