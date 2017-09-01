@@ -18,7 +18,8 @@ export type BuildTimeComponentOptions = {
   ariaHidden: boolean
   title: string | undefined | null
   ariaLabel: string | undefined | null
-  classNameBindings: string[],
+  classNameBindings: string[]
+  attributeBindings: string[]
   [key: string]: any
 }
 
@@ -28,17 +29,19 @@ const defaultOptions : BuildTimeComponentOptions = {
   ariaHidden: false,
   title: undefined,
   ariaLabel: undefined,
-  classNameBindings: []
+  classNameBindings: [],
+  attributeBindings: ['class']
 }
 
 export default class BuildTimeComponent {
   node: AST.MustacheStatement
   options: BuildTimeComponentOptions
+  [key: string]: any
 
   constructor(node: AST.MustacheStatement, options: Partial<BuildTimeComponentOptions> = {}) {
     this.node = node;
     this.options = Object.assign({}, defaultOptions, options);
-    this.options.classNameBindings = defaultOptions.classNameBindings.concat(options.classNameBindings || []);
+    this.options.attributeBindings = defaultOptions.attributeBindings.concat(options.attributeBindings || []);
   }
 
   get tagName(): string {
@@ -53,11 +56,37 @@ export default class BuildTimeComponent {
   }
 
   get attrs(): AST.AttrNode[] {
-    let attrs = [this.classAttr(), this.ariaHiddenAttr(), this.titleAttr(), this.ariaLabelAttr()];
-    return <AST.AttrNode[]> attrs.filter(attr => attr !== null);
+    let attrs: AST.AttrNode[] = [];
+    this.options.attributeBindings.forEach((binding) => {
+      let [propName, attrName] = binding.split(':');
+      attrName = attrName || propName;
+      let attrContent;
+      if (this[`${propName}Content`]) {
+        attrContent = this[`${propName}Content`]();
+      } else {
+        let pair = this.node.hash.pairs.find((pair) => pair.key === propName);
+        if (pair === undefined) {
+          if (this.options[propName] !== undefined && this.options[propName] !== null) {
+            let defaultValue = this.options[propName];
+            if (typeof defaultValue === 'boolean') {
+              attrContent = defaultValue ? 'true' : undefined;
+            } else {
+              attrContent = defaultValue;
+            }
+          }
+        } else {
+          attrContent = pair.value;
+        }
+      }
+      let attr = buildAttr(attrName, attrContent)
+      if (attr !== null) {
+        attrs.push(attr);
+      }
+    });
+    return attrs;
   }
 
-  classAttr(): AST.AttrNode | null {
+  classContent(): AST.TextNode | AST.MustacheStatement | AST.ConcatStatement | undefined {
     let content: AST.TextNode | AST.MustacheStatement | AST.ConcatStatement | undefined;
     if (this.options.classNames.length > 0) {
       content = appendToContent(this.options.classNames.join(' '), content)
@@ -93,48 +122,7 @@ export default class BuildTimeComponent {
         content = appendToContent(b.mustache(b.path('if'), mustacheArgs), content);
       }
     });
-    return buildAttr('class', content);
-  }
-
-  ariaHiddenAttr(): AST.AttrNode | null {
-    let content;
-    let ariaHiddenPair = this.node.hash.pairs.find((pair) => pair.key === 'ariaHidden');
-    if (ariaHiddenPair === undefined) {
-      if (this.options.ariaHidden) {
-        content = 'true';
-      }
-    } else if (ariaHiddenPair.value.type === 'BooleanLiteral') {
-      content = ariaHiddenPair.value.value ? 'true' : undefined;
-    } else {
-      content = b.mustache(b.path('if'), [ariaHiddenPair.value, b.string('true')])
-    }
-    return buildAttr('aria-hidden', content);
-  }
-
-  titleAttr(): AST.AttrNode | null {
-    let content;
-    let titlePair = this.node.hash.pairs.find((pair) => pair.key === 'title');
-    if (titlePair === undefined) {
-      if (this.options.title !== undefined && this.options.title !== null) {
-        content = this.options.title;
-      }
-    } else {
-      content = titlePair.value;
-    }
-    return buildAttr('title', content);
-  }
-
-  ariaLabelAttr(): AST.AttrNode | null {
-    let content;
-    let ariaLabelPair = this.node.hash.pairs.find((pair) => pair.key === 'ariaLabel');
-    if (ariaLabelPair === undefined) {
-      if (this.options.ariaLabel !== undefined && this.options.ariaLabel !== null) {
-        content = this.options.ariaLabel;
-      }
-    } else {
-      content = ariaLabelPair.value;
-    }
-    return buildAttr('aria-label', content);
+    return content;
   }
 
   toNode(): AST.ElementNode {

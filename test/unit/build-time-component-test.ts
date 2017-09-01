@@ -1,11 +1,10 @@
 'use strict';
 
-// import { builders as b } from '@glimmer/syntax';
 import processTemplate from '../helpers/process-template';
 import { BuildTimeComponent } from '../../lib';
 
 describe('BuildTimeComponent', function() {
-  // // tagName
+  // tagName
   it('generates a div by default', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
@@ -201,7 +200,10 @@ describe('BuildTimeComponent', function() {
   it('honors the default ariaHidden passed to the constructor', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        let component = new BuildTimeComponent(node, { ariaHidden: true });
+        let component = new BuildTimeComponent(node, {
+          ariaHidden: true,
+          attributeBindings: ['ariaHidden:aria-hidden']
+        });
         return component.toNode();
       }
     });
@@ -212,7 +214,10 @@ describe('BuildTimeComponent', function() {
   it('the boolean passed to ariaHidden trumps over the default value', function() {
     let modifiedTemplate = processTemplate(`{{my-component ariaHidden=false}}`, {
       MustacheStatement(node) {
-        let component = new BuildTimeComponent(node, { ariaHidden: true });
+        let component = new BuildTimeComponent(node, {
+          ariaHidden: true,
+          attributeBindings: ['ariaHidden:aria-hidden']
+        });
         return component.toNode();
       }
     });
@@ -224,20 +229,26 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component ariaHidden=boundValue}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, { ariaHidden: true });
+          let component = new BuildTimeComponent(node, {
+            ariaHidden: true,
+            attributeBindings: ['ariaHidden:aria-hidden']
+          });
           return component.toNode();
         }
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div aria-hidden={{if boundValue "true"}}></div>`);
+    expect(modifiedTemplate).toEqual(`<div aria-hidden={{boundValue}}></div>`);
   });
 
   // ariaLabel
   it('honors the default ariaLabel passed to the constructor', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        let component = new BuildTimeComponent(node, { ariaLabel: 'sample ariaLabel' });
+        let component = new BuildTimeComponent(node, {
+          ariaLabel: 'sample ariaLabel',
+          attributeBindings: ['ariaLabel:aria-label']
+        });
         return component.toNode();
       }
     });
@@ -248,7 +259,10 @@ describe('BuildTimeComponent', function() {
   it('the boolean passed to ariaLabel trumps over the default value', function() {
     let modifiedTemplate = processTemplate(`{{my-component ariaLabel="other ariaLabel"}}`, {
       MustacheStatement(node) {
-        let component = new BuildTimeComponent(node, { ariaLabel: 'sample ariaLabel' });
+        let component = new BuildTimeComponent(node, {
+          ariaLabel: 'sample ariaLabel',
+          attributeBindings: ['ariaLabel:aria-label']
+        });
         return component.toNode();
       }
     });
@@ -260,7 +274,10 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component ariaLabel=boundValue}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, { ariaLabel: 'default aria label' });
+          let component = new BuildTimeComponent(node, {
+            ariaLabel: 'default aria label',
+            attributeBindings: ['ariaLabel:aria-label']
+          });
           return component.toNode();
         }
       }
@@ -273,7 +290,7 @@ describe('BuildTimeComponent', function() {
   it('honors the default title passed to the constructor', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        let component = new BuildTimeComponent(node, { title: 'sample title' });
+        let component = new BuildTimeComponent(node, { title: 'sample title', attributeBindings: ['title'] });
         return component.toNode();
       }
     });
@@ -284,7 +301,7 @@ describe('BuildTimeComponent', function() {
   it('the boolean passed to title trumps over the default value', function() {
     let modifiedTemplate = processTemplate(`{{my-component title="other title"}}`, {
       MustacheStatement(node) {
-        let component = new BuildTimeComponent(node, { title: 'sample title' });
+        let component = new BuildTimeComponent(node, { title: 'sample title', attributeBindings: ['title'] });
         return component.toNode();
       }
     });
@@ -296,7 +313,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component title=boundValue}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, { title: 'default title' });
+          let component = new BuildTimeComponent(node, { title: 'default title', attributeBindings: ['title'] });
           return component.toNode();
         }
       }
