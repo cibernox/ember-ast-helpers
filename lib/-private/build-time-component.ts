@@ -33,6 +33,39 @@ const defaultOptions : BuildTimeComponentOptions = {
   attributeBindings: ['class']
 }
 
+/**
+ * This is supposed to be the main abstraction used by most people to achieve most of their works
+ * Only when they want to do something extra the can override methods and do it themselves.
+ *
+ * It has some basic behaviour by default to remind how "real" ember components work, but very little.
+ * Namely, the `class` property is automatically bound to `class` attribute in the resulting HTMLElement.
+ * Also, if on initialization the user passes `classNames`, the classes in that array will be concatenated
+ * with the value passed to `class`.
+ * The user can also pass default values for the properties the component doesn't receive on invocation.
+ *
+ * That object has two main properties to help working with this abstraction useful.
+ *
+ * - `classNameBindings`: Identical behavior to the one in Ember components
+ * - `attributeBindings`: Almost identical behaviour to the one in Ember components, with one enhancements.
+ *   Some attributes are expected to have regular values (p.e. the `title` attribute must have a string),
+ *   so `{{my-component title=username}}` compiles to `<div title={{username}}></div>`.
+ *   However, there is properties that are expected to be boolean that when converted to attributes
+ *   should have other values. That is why you can pass `attributeBindings: ['isDisabled:disabled:no']`
+ *   You will notice that in regular Ember components, the items in attribute bindings only have one `:`
+ *   dividing propertyName and attributeName. If you put two semicolons dividing the string in three parts
+ *   the third part will be used for the truthy value, generating in the example above `<div disabled={{if disabled 'no'}}></div>`
+ *
+ * More example usages:
+ *
+ * let component = new BuildTimeComponent(node); // creates the component
+ * component.toNode(); // generates the element with the right markup
+ *
+ * let soldier = new BuildTimeComponent(node, {
+ *   classNameBindings: ['active:is-deployed:reservist'],
+ *   attributeBindings: ['title', 'url:href', 'ariaHidden:aria-hidden:true']
+ * });
+ */
+
 export default class BuildTimeComponent {
   node: AST.MustacheStatement
   options: BuildTimeComponentOptions
