@@ -196,6 +196,80 @@ describe('BuildTimeComponent', function() {
     expect(modifiedTemplate).toEqual(`<div class={{if isActive "on-duty" "reservist"}}></div>`);
   });
 
+  it('binds properties passed on initialization to the class', function() {
+    let modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new BuildTimeComponent(node, {
+            classNameBindings: ['isActive:on-duty:reservist'],
+            isActive: true
+          });
+          return component.toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div class="on-duty"></div>`);
+
+    modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new BuildTimeComponent(node, {
+            classNameBindings: ['isActive:on-duty:reservist'],
+            isActive: false
+          });
+          return component.toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div class="reservist"></div>`);
+  });
+
+  it('binds uses the `<propertyName>Content` getter if present, over any passed config or runtime options', function() {
+    class SubComponent extends BuildTimeComponent {
+      isActiveContent() {
+        return 'yeah-baby';
+      }
+    }
+
+    let modifiedTemplate = processTemplate(`{{my-component isActive=true}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new SubComponent(node, {
+            classNameBindings: ['isActive'],
+            isActive: true
+          });
+          return component.toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div class="yeah-baby"></div>`);
+  });
+
+  it('binds uses the `<propertyName>Content` getter if present along with truthy and falsy classes, over any passed config or runtime options', function() {
+    class SubComponent extends BuildTimeComponent {
+      isActiveContent() {
+        return false;
+      }
+    }
+
+    let modifiedTemplate = processTemplate(`{{my-component isActive=true}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new SubComponent(node, {
+            classNameBindings: ['isActive:on-duty:reservist'],
+            isActive: true
+          });
+          return component.toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div class="reservist"></div>`);
+  });
+
   // ariaHidden
   it('honors the default ariaHidden passed to the constructor', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {

@@ -132,29 +132,39 @@ export default class BuildTimeComponent {
     }
     this.options.classNameBindings.forEach((binding) => {
       let bindingParts = binding.split(':');
-      if (bindingParts.length === 1) {
-        bindingParts.push(dashify(bindingParts[0]));
-      }
       let [propName, truthyClass, falsyClass] = bindingParts;
-      let pair = this.node.hash.pairs.find((p) => p.key === propName);
-      if (pair === undefined) {
-        if (!!this.options[propName]) {
-          content = appendToContent(truthyClass, content);
-        } else if (falsyClass) {
-          content = appendToContent(falsyClass, content);
-        }
-      } else if (AST.isLiteral(pair.value)) {
-        if (!!pair.value.value) {
+      if (this[`${propName}Content`]) {
+        let attrContent = this[`${propName}Content`]();
+        truthyClass = truthyClass || attrContent;
+        if (!!attrContent) {
           content = appendToContent(truthyClass, content);
         } else if (falsyClass) {
           content = appendToContent(falsyClass, content);
         }
       } else {
-        let mustacheArgs = [pair.value, b.string(truthyClass)];
-        if (falsyClass) {
-          mustacheArgs.push(b.string(falsyClass));
+        if (bindingParts.length === 1) {
+          truthyClass = dashify(bindingParts[0]);
         }
-        content = appendToContent(b.mustache(b.path('if'), mustacheArgs), content);
+        let pair = this.node.hash.pairs.find((p) => p.key === propName);
+        if (pair === undefined) {
+          if (!!this.options[propName]) {
+            content = appendToContent(truthyClass, content);
+          } else if (falsyClass) {
+            content = appendToContent(falsyClass, content);
+          }
+        } else if (AST.isLiteral(pair.value)) {
+          if (!!pair.value.value) {
+            content = appendToContent(truthyClass, content);
+          } else if (falsyClass) {
+            content = appendToContent(falsyClass, content);
+          }
+        } else {
+          let mustacheArgs = [pair.value, b.string(truthyClass)];
+          if (falsyClass) {
+            mustacheArgs.push(b.string(falsyClass));
+          }
+          content = appendToContent(b.mustache(b.path('if'), mustacheArgs), content);
+        }
       }
     });
     return content;
