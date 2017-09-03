@@ -6,7 +6,7 @@ interface AppendOptions {
   prependSpace: boolean
 }
 
-export type AttrValueAppendable = AST.PathExpression | AST.SubExpression | AST.TextNode | AST.Literal | AST.Literal | AST.MustacheStatement | string;
+export type AttrValueAppendable = AST.PathExpression | AST.SubExpression | AST.TextNode | AST.Literal | AST.Literal | AST.MustacheStatement | AST.ConcatStatement | string;
 
 function appendLiteralToContent(str: string, content: AttrValue, opts: AppendOptions): AttrValue {
   if (content.type === 'TextNode') {
@@ -85,6 +85,11 @@ export default function appendToContent(val: AttrValueAppendable, content: AttrV
     break;
   case 'MustacheStatement':
     content = appendMustacheToContent(val, content, opts);
+    break;
+  case 'ConcatStatement':
+    val.parts.forEach((part, i) => {
+      content = appendToContent(part, content, i === 0 ? opts : { prependSpace: false });
+    });
     break;
   case 'TextNode':
     content = appendTextNodeToContent(val, content, opts);
