@@ -109,6 +109,8 @@ export default class BuildTimeComponent {
           }
         } else if (pair.value.type === 'PathExpression' && valueWhenTrue) {
           attrContent = b.mustache(b.path('if'), [pair.value, b.string(valueWhenTrue)])
+        } else if (valueWhenTrue) {
+          attrContent = pair.value ? valueWhenTrue : undefined;
         } else {
           attrContent = pair.value;
         }

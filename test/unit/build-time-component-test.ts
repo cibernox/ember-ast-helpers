@@ -316,7 +316,21 @@ describe('BuildTimeComponent', function() {
   });
 
   it('the path passed to ariaHidden trumps over the default value and uses the true value when provided', function() {
-    let modifiedTemplate = processTemplate(`{{my-component ariaHidden=boundValue}}`, {
+    let modifiedTemplate = processTemplate(`{{my-component ariaHidden=true}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new BuildTimeComponent(node, {
+            ariaHidden: true,
+            attributeBindings: ['ariaHidden:aria-hidden:secret']
+          });
+          return component.toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div aria-hidden="secret"></div>`);
+
+    modifiedTemplate = processTemplate(`{{my-component ariaHidden=boundValue}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
           let component = new BuildTimeComponent(node, {
