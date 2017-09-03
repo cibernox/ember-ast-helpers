@@ -67,11 +67,11 @@ const defaultOptions : BuildTimeComponentOptions = {
  */
 
 export default class BuildTimeComponent {
-  node: AST.MustacheStatement
+  node: AST.MustacheStatement | AST.BlockStatement
   options: BuildTimeComponentOptions
   [key: string]: any
 
-  constructor(node: AST.MustacheStatement, options: Partial<BuildTimeComponentOptions> = {}) {
+  constructor(node: AST.MustacheStatement | AST.BlockStatement, options: Partial<BuildTimeComponentOptions> = {}) {
     this.node = node;
     this.options = Object.assign({}, defaultOptions, options);
     this.options.attributeBindings = defaultOptions.attributeBindings.concat(options.attributeBindings || []);
@@ -121,6 +121,18 @@ export default class BuildTimeComponent {
       }
     });
     return attrs;
+  }
+
+  get modifiers(): AST.ElementModifierStatement[] {
+    return [];
+  }
+
+  get children(): AST.Statement[] {
+    if (this.node.type === 'BlockStatement') {
+      return this.node.program.body;
+    } else {
+      return [];
+    }
   }
 
   classContent(): AST.TextNode | AST.MustacheStatement | AST.ConcatStatement | undefined {
@@ -173,6 +185,6 @@ export default class BuildTimeComponent {
   }
 
   toNode(): AST.ElementNode {
-    return b.element(this.tagName, this.attrs);
+    return b.element(this.tagName, this.attrs, this.modifiers, this.children);
   }
 }

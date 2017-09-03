@@ -425,4 +425,18 @@ describe('BuildTimeComponent', function() {
 
     expect(modifiedTemplate).toEqual(`<div title={{boundValue}}></div>`);
   });
+
+  // block
+  it('copies the block over to the element', function() {
+    let modifiedTemplate = processTemplate(`{{#my-component title=boundValue}}<span>Inner content</span>{{/my-component}}`, {
+      BlockStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new BuildTimeComponent(node);
+          return component.toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div><span>Inner content</span></div>`);
+  })
 });
