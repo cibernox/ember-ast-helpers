@@ -338,7 +338,7 @@ describe('BuildTimeComponent', function() {
     expect(modifiedTemplate).toEqual(`<div disabled="nope"></div>`);
   });
 
-  // block
+  // block transform
   it('copies the block over to the element', function() {
     let modifiedTemplate = processTemplate(`{{#my-component title=boundValue}}<span>Inner content</span>{{/my-component}}`, {
       BlockStatement(node) {
@@ -353,7 +353,7 @@ describe('BuildTimeComponent', function() {
   });
 
   it('transforms the block with the given visitor if provided', function() {
-    let modifiedTemplate = processTemplate(`{{#my-component title=boundValue}}<span>Inner content</span>{{/my-component}}<span>outside span</span>`, {
+    let modifiedTemplate = processTemplate(`{{#my-component}}<span>Inner content</span>{{/my-component}}<span>outside span</span>`, {
       BlockStatement(node) {
         if (node.path.original === 'my-component') {
           let component = new BuildTimeComponent(node, {
@@ -369,5 +369,70 @@ describe('BuildTimeComponent', function() {
     });
 
     expect(modifiedTemplate).toEqual(`<div><strong>Inner content</strong></div><span>outside span</span>`);
+  });
+
+  it('the visitor can be specified in class extension', function() {
+    class MyComponent extends BuildTimeComponent {
+      contentVisitor = {
+        ElementNode(node: AST.ElementNode) {
+          return b.element('strong', [], [], node.children);
+        }
+      }
+    }
+
+    let modifiedTemplate = processTemplate(`{{#my-component}}<span>Inner content</span>{{/my-component}}<span>outside span</span>`, {
+      BlockStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node).toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div><strong>Inner content</strong></div><span>outside span</span>`);
+  });
+
+  it('the visitor does nothing if the element has no block', function() {
+    class MyComponent extends BuildTimeComponent {
+      contentVisitor = {
+        ElementNode(node: AST.ElementNode) {
+          return b.element('strong', [], [], node.children);
+        }
+      }
+    }
+
+    let modifiedTemplate = processTemplate(`{{my-component}}<span>outside span</span>`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node).toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div></div><span>outside span</span>`);
+  });
+
+  it('the visitor can be specified in class extension and have access to the component when used with arrow functions', function() {
+    class MyComponent extends BuildTimeComponent {
+      contentVisitor = {
+        ElementNode: (node: AST.ElementNode) => {
+          let pair = this.node.hash.pairs.find((p) => p.key === 'classForChildren');
+          let attrs: AST.AttrNode[] = [];
+          if (pair && pair.value.type === 'StringLiteral') {
+            attrs.push(b.attr('class', b.text(pair.value.value)));
+          }
+          return b.element('strong', attrs, [], node.children);
+        }
+      }
+    }
+
+    let modifiedTemplate = processTemplate(`{{#my-component classForChildren="foobar"}}<span>Inner content</span>{{/my-component}}<span>outside span</span>`, {
+      BlockStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node).toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div><strong class="foobar">Inner content</strong></div><span>outside span</span>`);
   });
 });
