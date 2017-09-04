@@ -164,7 +164,7 @@ export default class BuildTimeComponent {
           } else if (falsyClass) {
             content = appendToContent(falsyClass, content);
           }
-        } else {
+        } else if (propValue !== undefined) {
           content = appendToContent(propValue, content);
         }
       }
