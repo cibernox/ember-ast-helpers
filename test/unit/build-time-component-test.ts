@@ -270,128 +270,8 @@ describe('BuildTimeComponent', function() {
     expect(modifiedTemplate).toEqual(`<div class="reservist"></div>`);
   });
 
-  // ariaHidden
-  it('honors the default ariaHidden passed to the constructor', function() {
-    let modifiedTemplate = processTemplate(`{{my-component}}`, {
-      MustacheStatement(node) {
-        let component = new BuildTimeComponent(node, {
-          ariaHidden: true,
-          attributeBindings: ['ariaHidden:aria-hidden']
-        });
-        return component.toNode();
-      }
-    });
-
-    expect(modifiedTemplate).toEqual(`<div aria-hidden="true"></div>`);
-  });
-
-  it('the boolean passed to ariaHidden trumps over the default value', function() {
-    let modifiedTemplate = processTemplate(`{{my-component ariaHidden=false}}`, {
-      MustacheStatement(node) {
-        let component = new BuildTimeComponent(node, {
-          ariaHidden: true,
-          attributeBindings: ['ariaHidden:aria-hidden']
-        });
-        return component.toNode();
-      }
-    });
-
-    expect(modifiedTemplate).toEqual(`<div></div>`);
-  });
-
-  it('the path passed to ariaHidden trumps over the default value', function() {
-    let modifiedTemplate = processTemplate(`{{my-component ariaHidden=boundValue}}`, {
-      MustacheStatement(node) {
-        if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, {
-            ariaHidden: true,
-            attributeBindings: ['ariaHidden:aria-hidden']
-          });
-          return component.toNode();
-        }
-      }
-    });
-
-    expect(modifiedTemplate).toEqual(`<div aria-hidden={{boundValue}}></div>`);
-  });
-
-  it('the path passed to ariaHidden trumps over the default value and uses the true value when provided', function() {
-    let modifiedTemplate = processTemplate(`{{my-component ariaHidden=true}}`, {
-      MustacheStatement(node) {
-        if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, {
-            ariaHidden: true,
-            attributeBindings: ['ariaHidden:aria-hidden:secret']
-          });
-          return component.toNode();
-        }
-      }
-    });
-
-    expect(modifiedTemplate).toEqual(`<div aria-hidden="secret"></div>`);
-
-    modifiedTemplate = processTemplate(`{{my-component ariaHidden=boundValue}}`, {
-      MustacheStatement(node) {
-        if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, {
-            ariaHidden: true,
-            attributeBindings: ['ariaHidden:aria-hidden:secret']
-          });
-          return component.toNode();
-        }
-      }
-    });
-
-    expect(modifiedTemplate).toEqual(`<div aria-hidden={{if boundValue "secret"}}></div>`);
-  });
-
-  // ariaLabel
-  it('honors the default ariaLabel passed to the constructor', function() {
-    let modifiedTemplate = processTemplate(`{{my-component}}`, {
-      MustacheStatement(node) {
-        let component = new BuildTimeComponent(node, {
-          ariaLabel: 'sample ariaLabel',
-          attributeBindings: ['ariaLabel:aria-label']
-        });
-        return component.toNode();
-      }
-    });
-
-    expect(modifiedTemplate).toEqual(`<div aria-label="sample ariaLabel"></div>`);
-  });
-
-  it('the boolean passed to ariaLabel trumps over the default value', function() {
-    let modifiedTemplate = processTemplate(`{{my-component ariaLabel="other ariaLabel"}}`, {
-      MustacheStatement(node) {
-        let component = new BuildTimeComponent(node, {
-          ariaLabel: 'sample ariaLabel',
-          attributeBindings: ['ariaLabel:aria-label']
-        });
-        return component.toNode();
-      }
-    });
-
-    expect(modifiedTemplate).toEqual(`<div aria-label="other ariaLabel"></div>`);
-  });
-
-  it('the path passed to ariaLabel trumps over the default value', function() {
-    let modifiedTemplate = processTemplate(`{{my-component ariaLabel=boundValue}}`, {
-      MustacheStatement(node) {
-        if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, {
-            ariaLabel: 'default aria label',
-            attributeBindings: ['ariaLabel:aria-label']
-          });
-          return component.toNode();
-        }
-      }
-    });
-
-    expect(modifiedTemplate).toEqual(`<div aria-label={{boundValue}}></div>`);
-  });
-
-  // title
-  it('honors the default title passed to the constructor', function() {
+  // attributeBindings
+  it('binds properties passed to the constructor passed to the constructor', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
         let component = new BuildTimeComponent(node, { title: 'sample title', attributeBindings: ['title'] });
@@ -402,28 +282,59 @@ describe('BuildTimeComponent', function() {
     expect(modifiedTemplate).toEqual(`<div title="sample title"></div>`);
   });
 
-  it('the boolean passed to title trumps over the default value', function() {
-    let modifiedTemplate = processTemplate(`{{my-component title="other title"}}`, {
+  it('binds properties passed to the constructor passed to the constructor to the right attribte', function() {
+    let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        let component = new BuildTimeComponent(node, { title: 'sample title', attributeBindings: ['title'] });
+        let component = new BuildTimeComponent(node, { title: 'sample title', attributeBindings: ['title:aria-label'] });
         return component.toNode();
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div title="other title"></div>`);
+    expect(modifiedTemplate).toEqual(`<div aria-label="sample title"></div>`);
   });
 
-  it('the path passed to title trumps over the default value', function() {
-    let modifiedTemplate = processTemplate(`{{my-component title=boundValue}}`, {
+  it('binds properties passed to the constructor passed to the constructor using the truthy class', function() {
+    let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, { title: 'default title', attributeBindings: ['title'] });
-          return component.toNode();
-        }
+        let component = new BuildTimeComponent(node, { title: 'sample title', attributeBindings: ['title:title:the-title'] });
+        return component.toNode();
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div title={{boundValue}}></div>`);
+    expect(modifiedTemplate).toEqual(`<div title="the-title"></div>`);
+  });
+
+  it('binds properties passed on invocation over those passed in the controller', function() {
+    let modifiedTemplate = processTemplate(`{{my-component title="real title"}}`, {
+      MustacheStatement(node) {
+        let component = new BuildTimeComponent(node, { title: 'default title', attributeBindings: ['title'] });
+        return component.toNode();
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div title="real title"></div>`);
+  });
+
+  it('binds properties passed on invocation over those passed in the controller, to the specified attribute', function() {
+    let modifiedTemplate = processTemplate(`{{my-component title="real title"}}`, {
+      MustacheStatement(node) {
+        let component = new BuildTimeComponent(node, { title: 'default title', attributeBindings: ['title:aria-label'] });
+        return component.toNode();
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div aria-label="real title"></div>`);
+  });
+
+  it('binds properties passed on invocation over those passed in the controller using the truthy class', function() {
+    let modifiedTemplate = processTemplate(`{{my-component isDisabled=true}}`, {
+      MustacheStatement(node) {
+        let component = new BuildTimeComponent(node, { isDisabled: false, attributeBindings: ['isDisabled:disabled:nope'] });
+        return component.toNode();
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div disabled="nope"></div>`);
   });
 
   // block

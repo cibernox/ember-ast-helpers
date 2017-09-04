@@ -102,9 +102,9 @@ export default class BuildTimeComponent {
           if (this.options[propName] !== undefined && this.options[propName] !== null) {
             let defaultValue = this.options[propName];
             if (typeof defaultValue === 'boolean') {
-              attrContent = defaultValue ? 'true' : undefined;
+              attrContent = defaultValue ? (valueWhenTrue || 'true') : undefined;
             } else {
-              attrContent = defaultValue;
+              attrContent = valueWhenTrue ? valueWhenTrue : defaultValue;
             }
           }
         } else if (pair.value.type === 'PathExpression' && valueWhenTrue) {
@@ -112,7 +112,7 @@ export default class BuildTimeComponent {
         } else if (pair.value.type === 'BooleanLiteral' && valueWhenTrue) {
           attrContent = pair.value.value ? valueWhenTrue : undefined;
         } else {
-          attrContent = pair.value;
+          attrContent = valueWhenTrue ? valueWhenTrue : pair.value;
         }
       }
       let attr = buildAttr(attrName, attrContent)
