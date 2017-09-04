@@ -31,10 +31,12 @@
   },
   "dependencies": {
     "@glimmer/compiler": "^0.27.0",
-    "@glimmer/syntax": "^0.27.0"
+    "@glimmer/syntax": "^0.27.0",
+    "lodash": "^4.17.4"
   },
   "devDependencies": {
     "@types/jest": "^20.0.8",
+    "@types/lodash": "^4.14.74",
     "eslint-plugin-node": "^5.1.0",
     "glob": "^7.0.0",
     "jest": "^20.0.4",
@@ -46,7 +48,9 @@
     "node": ">= 6"
   },
   "jest": {
-    "moduleFileExtensions": ["js"],
+    "moduleFileExtensions": [
+      "js"
+    ],
     "testMatch": [
       "<rootDir>/dist/test/**/*-test.js"
     ]

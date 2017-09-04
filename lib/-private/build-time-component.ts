@@ -6,6 +6,7 @@ import {
   AST,
   NodeVisitor
 } from '@glimmer/syntax';
+import { uniq } from 'lodash';
 
 function dashify(str: string): string {
   str = str.replace(/([a-z])([A-Z])/g, '$1-$2');
@@ -25,6 +26,8 @@ export type BuildTimeComponentOptions = {
   contentVisitor?: NodeVisitor
   [key: string]: any
 }
+
+export type BuildTimeComponentNode = AST.MustacheStatement | AST.BlockStatement
 
 const defaultOptions : BuildTimeComponentOptions = {
   tagName: 'div',
@@ -71,54 +74,152 @@ const defaultOptions : BuildTimeComponentOptions = {
  */
 
 export default class BuildTimeComponent {
-  node: AST.MustacheStatement | AST.BlockStatement
-  options: BuildTimeComponentOptions
-  contentVisitor?: NodeVisitor
+  node: BuildTimeComponentNode
+  defaults = Object.assign({}, defaultOptions)
+  overrides: Partial<BuildTimeComponentOptions>
+  attrs: { [key: string]: AST.Literal | AST.PathExpression | AST.SubExpression }
+  _contentVisitor?: NodeVisitor
   [key: string]: any
 
-  constructor(node: AST.MustacheStatement | AST.BlockStatement, options: Partial<BuildTimeComponentOptions> = {}) {
+  constructor(node: BuildTimeComponentNode, overrides: Partial<BuildTimeComponentOptions> = {}) {
     this.node = node;
-    this.contentVisitor = options.contentVisitor;
-    this.options = Object.assign({}, defaultOptions, options);
-    this.options.attributeBindings = defaultOptions.attributeBindings.concat(options.attributeBindings || []);
+    this.overrides = overrides;
+    this.attrs = {};
+    this._populateAttrs(node);
+    // this.defaults = Object.assign({}, defaultOptions, defaults);
+    // this.defaults.attributeBindings = defaultOptions.attributeBindings.concat(options.attributeBindings || []);
   }
 
   get tagName(): string {
-    let tagNamePair = this.node.hash.pairs.find((pair) => pair.key === 'tagName');
-    if (tagNamePair === undefined) {
-      return this.options.tagName;
-    } else if (tagNamePair.value.type === 'StringLiteral') {
-      return tagNamePair.value.value;
+    let tagName = this.attrs.tagName;
+    if (tagName === undefined) {
+      return this.overrides.tagName || this.defaults.tagName;
+    } else if (tagName.type === 'StringLiteral') {
+      return tagName.value;
     } else {
-      throw new Error(`Build-time components cannot receive tagName hash properties with type ${tagNamePair.value.type}`);
+      throw new Error(`Build-time components cannot receive tagName hash properties with type ${tagName.type}`);
     }
   }
+  set tagName(str: string) {
+    this.defaults.tagName = str
+  }
 
-  get attrs(): AST.AttrNode[] {
+  get contentVisitor(): NodeVisitor | undefined {
+    return this._contentVisitor || this.overrides.contentVisitor;
+  }
+  set contentVisitor(visitor: NodeVisitor | undefined) {
+    this._contentVisitor = visitor;
+  }
+
+  get class(): AST.TextNode | AST.MustacheStatement | AST.ConcatStatement | undefined {
+    let content: AST.TextNode | AST.MustacheStatement | AST.ConcatStatement | undefined;
+    if (this.classNames.length > 0) {
+      content = appendToContent(this.classNames.join(' '), content)
+    }
+    if (this.attrs.class !== undefined) {
+      content = appendToContent(this.attrs.class, content);
+    }
+    this.classNameBindings.forEach((binding) => {
+      let bindingParts = binding.split(':');
+      let [propName, truthyClass, falsyClass] = bindingParts;
+      let attr = this.attrs[propName];
+      if (attr) {
+        if (attr.type === 'BooleanLiteral' || attr.type === 'NullLiteral' || attr.type === 'UndefinedLiteral') {
+          truthyClass = truthyClass || dashify(propName);
+          if (!!attr.value) {
+            content = appendToContent(truthyClass, content);
+          } else if (falsyClass) {
+            content = appendToContent(falsyClass, content);
+          }
+        } else if (attr.type === 'StringLiteral' || attr.type === 'NumberLiteral') {
+          content = appendToContent(String(attr.value), content);
+        } else if (attr.type === 'PathExpression') {
+          if (truthyClass) {
+            let mustacheArgs = [attr, b.string(truthyClass)];
+            if (falsyClass) {
+              mustacheArgs.push(b.string(falsyClass));
+            }
+            content = appendToContent(b.mustache(b.path('if'), mustacheArgs), content);
+          } else {
+            content = appendToContent(b.mustache(attr), content);
+          }
+        } else if (attr.type === 'SubExpression') {
+          if (truthyClass) {
+            let mustacheArgs = [attr, b.string(truthyClass)];
+            if (falsyClass) {
+              mustacheArgs.push(b.string(falsyClass));
+            }
+            content = appendToContent(b.mustache(b.path('if'), mustacheArgs), content);
+          } else {
+            content = appendToContent(b.mustache(attr.path, attr.params, attr.hash), content);
+          }
+        }
+      } else {
+        let propValue = this.overrides[propName] !== undefined ? this.overrides[propName] : this.defaults[propName];
+        if (propValue === undefined) {
+          propValue = this[propName];
+        }
+        if (typeof propValue === 'boolean' || truthyClass) {
+          truthyClass = truthyClass || dashify(propName);
+          if (propValue) {
+            content = appendToContent(truthyClass, content);
+          } else if (falsyClass) {
+            content = appendToContent(falsyClass, content);
+          }
+        } else {
+          content = appendToContent(propValue, content);
+        }
+      }
+    });
+    return content;
+  }
+
+  // Concatenated properties
+  get attributeBindings() {
+    return this.defaults.attributeBindings.concat(this.overrides.attributeBindings || [])
+  }
+  set attributeBindings(bindings: string[]) {
+    this.overrides.attributeBindings = uniq(this.overrides.attributeBindings || []).concat(bindings);
+  }
+
+  get classNames() {
+    return this.defaults.classNames.concat(this.overrides.classNames || [])
+  }
+  set classNames(classNames: string[]) {
+    this.overrides.classNames = uniq((this.overrides.classNames || []).concat(classNames));
+  }
+
+  get classNameBindings() {
+    return this.defaults.classNameBindings.concat(this.overrides.classNameBindings || [])
+  }
+  set classNameBindings(classNameBindings: string[]) {
+    this.overrides.classNameBindings = uniq((this.overrides.classNameBindings || []).concat(classNameBindings));
+  }
+
+  // Node getters
+  get nodeAttrs(): AST.AttrNode[] {
     let attrs: AST.AttrNode[] = [];
-    this.options.attributeBindings.forEach((binding) => {
+    this.attributeBindings.forEach((binding) => {
       let [propName, attrName, valueWhenTrue] = binding.split(':');
       attrName = attrName || propName;
-      let attrContent;
-      if (this[`${propName}Content`]) {
-        attrContent = this[`${propName}Content`]();
-      } else {
-        let pair = this.node.hash.pairs.find((pair) => pair.key === propName);
-        if (pair === undefined) {
-          if (this.options[propName] !== undefined && this.options[propName] !== null) {
-            let defaultValue = this.options[propName];
+      let attrContent = this[propName];
+      if (attrContent === undefined) {
+        let attr = this.attrs[propName];
+        if (attr === undefined) {
+          let defaultValue = this.overrides[propName] || this.defaults[propName];
+          if (defaultValue !== undefined && defaultValue !== null) {
             if (typeof defaultValue === 'boolean') {
               attrContent = defaultValue ? (valueWhenTrue || 'true') : undefined;
             } else {
               attrContent = valueWhenTrue ? valueWhenTrue : defaultValue;
             }
           }
-        } else if (pair.value.type === 'PathExpression' && valueWhenTrue) {
-          attrContent = b.mustache(b.path('if'), [pair.value, b.string(valueWhenTrue)])
-        } else if (pair.value.type === 'BooleanLiteral' && valueWhenTrue) {
-          attrContent = pair.value.value ? valueWhenTrue : undefined;
+        } else if (attr.type === 'PathExpression' && valueWhenTrue) {
+          attrContent = b.mustache(b.path('if'), [attr, b.string(valueWhenTrue)])
+        } else if (attr.type === 'BooleanLiteral' && valueWhenTrue) {
+          attrContent = attr.value ? valueWhenTrue : undefined;
         } else {
-          attrContent = valueWhenTrue ? valueWhenTrue : pair.value;
+          attrContent = valueWhenTrue ? valueWhenTrue : attr;
         }
       }
       let attr = buildAttr(attrName, attrContent)
@@ -129,11 +230,11 @@ export default class BuildTimeComponent {
     return attrs;
   }
 
-  get modifiers(): AST.ElementModifierStatement[] {
+  get nodeModifiers(): AST.ElementModifierStatement[] {
     return [];
   }
 
-  get children(): AST.Statement[] {
+  get nodeChildren(): AST.Statement[] {
     if (this.node.type === 'BlockStatement') {
       if (this.contentVisitor) {
         traverse(this.node.program, this.contentVisitor)
@@ -144,56 +245,14 @@ export default class BuildTimeComponent {
     }
   }
 
-  classContent(): AST.TextNode | AST.MustacheStatement | AST.ConcatStatement | undefined {
-    let content: AST.TextNode | AST.MustacheStatement | AST.ConcatStatement | undefined;
-    if (this.options.classNames.length > 0) {
-      content = appendToContent(this.options.classNames.join(' '), content)
-    }
-    let classPair = this.node.hash.pairs.find((pair) => pair.key === 'class');
-    if (classPair !== undefined) {
-      content = appendToContent(classPair.value, content);
-    }
-    this.options.classNameBindings.forEach((binding) => {
-      let bindingParts = binding.split(':');
-      let [propName, truthyClass, falsyClass] = bindingParts;
-      if (this[`${propName}Content`]) {
-        let attrContent = this[`${propName}Content`]();
-        truthyClass = truthyClass || attrContent;
-        if (!!attrContent) {
-          content = appendToContent(truthyClass, content);
-        } else if (falsyClass) {
-          content = appendToContent(falsyClass, content);
-        }
-      } else {
-        if (bindingParts.length === 1) {
-          truthyClass = dashify(bindingParts[0]);
-        }
-        let pair = this.node.hash.pairs.find((p) => p.key === propName);
-        if (pair === undefined) {
-          if (!!this.options[propName]) {
-            content = appendToContent(truthyClass, content);
-          } else if (falsyClass) {
-            content = appendToContent(falsyClass, content);
-          }
-        } else if (AST.isLiteral(pair.value)) {
-          if (!!pair.value.value) {
-            content = appendToContent(truthyClass, content);
-          } else if (falsyClass) {
-            content = appendToContent(falsyClass, content);
-          }
-        } else {
-          let mustacheArgs = [pair.value, b.string(truthyClass)];
-          if (falsyClass) {
-            mustacheArgs.push(b.string(falsyClass));
-          }
-          content = appendToContent(b.mustache(b.path('if'), mustacheArgs), content);
-        }
-      }
-    });
-    return content;
+  toNode(): AST.ElementNode {
+    return b.element(this.tagName, this.nodeAttrs, this.nodeModifiers, this.nodeChildren);
   }
 
-  toNode(): AST.ElementNode {
-    return b.element(this.tagName, this.attrs, this.modifiers, this.children);
+  // private
+  _populateAttrs(node: BuildTimeComponentNode) {
+    node.hash.pairs.forEach((pair) => {
+      this.attrs[pair.key] = pair.value;
+    });
   }
 }

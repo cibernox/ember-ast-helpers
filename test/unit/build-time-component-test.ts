@@ -1,7 +1,7 @@
 'use strict';
 
 import processTemplate from '../helpers/process-template';
-import { BuildTimeComponent } from '../../lib';
+import { BuildTimeComponent, BuildTimeComponentNode, BuildTimeComponentOptions } from '../../lib';
 import { builders as b, AST } from '@glimmer/syntax';
 
 describe('BuildTimeComponent', function() {
@@ -39,6 +39,34 @@ describe('BuildTimeComponent', function() {
     expect(modifiedTemplate).toEqual(`<span></span>`);
   });
 
+  it('honors tagName set when subclassing', function() {
+    class MyComponent extends BuildTimeComponent {
+      tagName = 'span'
+    }
+
+    let modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        return new MyComponent(node).toNode();
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<span></span>`);
+  });
+
+  it('honors the default tagName over the one specified subclassing', function() {
+    class MyComponent extends BuildTimeComponent {
+      tagName = 'section'
+    }
+
+    let modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        return new MyComponent(node, { tagName: 'span' }).toNode();
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<span></span>`);
+  });
+
   // class
   it('honors the default classNames passed to the constructor', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
@@ -49,6 +77,36 @@ describe('BuildTimeComponent', function() {
     });
 
     expect(modifiedTemplate).toEqual(`<div class="foo bar"></div>`);
+  });
+
+  it('honors the default classNames defined on subclasses', function() {
+    class MyComponent extends BuildTimeComponent {
+      classNames = ['foo', 'bar']
+    }
+    let modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        return new MyComponent(node).toNode();
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div class="foo bar"></div>`);
+  });
+
+  it('classNames are treated as concatenated properties', function() {
+    class MyComponent extends BuildTimeComponent {
+      classNames = ['foo', 'bar']
+    }
+    class MySubComponent extends MyComponent {
+      classNames = ['foobar']
+    }
+
+    let modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        return new MySubComponent(node, { classNames: ['qux'] }).toNode();
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div class="qux foo bar foobar"></div>`);
   });
 
   it('concatenates the default classes and the additional strings passed with the `class` option', function() {
@@ -119,6 +177,19 @@ describe('BuildTimeComponent', function() {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
           let component = new BuildTimeComponent(node, { classNameBindings: ['isActive'] });
+          return component.toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div class={{isActive}}></div>`);
+  });
+
+  it('transform paths to class names using the truty class', function() {
+    let modifiedTemplate = processTemplate(`{{my-component isActive=isActive}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new BuildTimeComponent(node, { classNameBindings: ['isActive:is-active'] });
           return component.toNode();
         }
       }
@@ -227,31 +298,42 @@ describe('BuildTimeComponent', function() {
     expect(modifiedTemplate).toEqual(`<div class="reservist"></div>`);
   });
 
-  it('binds uses the `<propertyName>Content` getter if present, over any passed config or runtime options', function() {
-    class SubComponent extends BuildTimeComponent {
-      isActiveContent() {
-        return 'yeah-baby';
-      }
-    }
-
-    let modifiedTemplate = processTemplate(`{{my-component isActive=true}}`, {
+  it('the property passed in the template wins over the one overrides passed to the constructor', function() {
+    let modifiedTemplate = processTemplate(`{{my-component extraClass="runtime"}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new SubComponent(node, {
-            classNameBindings: ['isActive'],
-            isActive: true
+          let component = new BuildTimeComponent(node, {
+            classNameBindings: ['extraClass'],
+            extraClass: 'override'
           });
           return component.toNode();
         }
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div class="yeah-baby"></div>`);
+    expect(modifiedTemplate).toEqual(`<div class="runtime"></div>`);
   });
 
-  it('binds uses the `<propertyName>Content` getter if present along with truthy and falsy classes, over any passed config or runtime options', function() {
+  it('the property passed in the template wins over the one specified when subclassing', function() {
+    class MyComponent extends BuildTimeComponent {
+      extraClass = 'extend-time'
+      classNameBindings = ['extraClass']
+    }
+
+    let modifiedTemplate = processTemplate(`{{my-component extraClass="runtime"}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node).toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div class="runtime"></div>`);
+  });
+
+  it('the property passed on creation wins over the one defined in extension', function() {
     class SubComponent extends BuildTimeComponent {
-      isActiveContent() {
+      get isActive() {
         return false;
       }
     }
@@ -268,11 +350,48 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div class="reservist"></div>`);
+    expect(modifiedTemplate).toEqual(`<div class="on-duty"></div>`);
+  });
+
+  it('the `<propName>` getter is used if no runtime or create time option wins over it', function() {
+    class SubComponent extends BuildTimeComponent {
+      get isActive() {
+        return true;
+      }
+    }
+
+    let modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new SubComponent(node, {
+            classNameBindings: ['isActive:on-duty:reservist'],
+          });
+          return component.toNode();
+        }
+      }
+    });
+    class AnotherSubComponent extends BuildTimeComponent {
+      get isActive() {
+        return 'yes';
+      }
+    }
+
+    modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new AnotherSubComponent(node, {
+            classNameBindings: ['isActive'],
+          });
+          return component.toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div class="yes"></div>`);
   });
 
   // attributeBindings
-  it('binds properties passed to the constructor passed to the constructor', function() {
+  it('binds properties passed to the constructor', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
         let component = new BuildTimeComponent(node, { title: 'sample title', attributeBindings: ['title'] });
@@ -283,7 +402,55 @@ describe('BuildTimeComponent', function() {
     expect(modifiedTemplate).toEqual(`<div title="sample title"></div>`);
   });
 
-  it('binds properties passed to the constructor passed to the constructor to the right attribte', function() {
+  it('binds properties set on subclasses', function() {
+    class MyComponent extends BuildTimeComponent {
+      title = 'sample title'
+    }
+    let modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        return new MyComponent(node, { attributeBindings: ['title'] }).toNode();
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div title="sample title"></div>`);
+  });
+
+  it('works when attribute bindings are defined in extension time', function() {
+    class MyComponent extends BuildTimeComponent {
+      attributeBindings = ['title']
+    }
+    let modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        return new MyComponent(node, { title: 'sample title' }).toNode();
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div title="sample title"></div>`);
+  });
+
+  it('attribute bindings are treated as concatenated properties', function() {
+    class MyComponent extends BuildTimeComponent {
+      attributeBindings = ['title']
+    }
+    class MySubComponent extends MyComponent {
+      attributeBindings = ['ariaLabel:aria-label']
+    }
+
+    let modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        return new MySubComponent(node, {
+          title: 'sample title',
+          ariaLabel: 'sample label',
+          foo: 'bar',
+          attributeBindings: ['foo']
+        }).toNode();
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div foo="bar" title="sample title" aria-label="sample label"></div>`);
+  });
+
+  it('binds properties passed to the constructor to the right attribute', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
         let component = new BuildTimeComponent(node, { title: 'sample title', attributeBindings: ['title:aria-label'] });
@@ -294,7 +461,7 @@ describe('BuildTimeComponent', function() {
     expect(modifiedTemplate).toEqual(`<div aria-label="sample title"></div>`);
   });
 
-  it('binds properties passed to the constructor passed to the constructor using the truthy class', function() {
+  it('binds properties passed to the constructor using the truthy class', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
         let component = new BuildTimeComponent(node, { title: 'sample title', attributeBindings: ['title:title:the-title'] });
