@@ -120,6 +120,20 @@ export default class BuildTimeComponent {
     this.classNameBindings.forEach((binding) => {
       let bindingParts = binding.split(':');
       let [propName, truthyClass, falsyClass] = bindingParts;
+      if (this[`${propName}Content`]) {
+        let value = this[`${propName}Content`]();
+        if (value === null || value === undefined || typeof value === 'boolean') {
+          truthyClass = truthyClass || dashify(propName);
+          if (value) {
+            content = appendToContent(truthyClass, content);
+          } else if (falsyClass) {
+            content = appendToContent(falsyClass, content);
+          }
+        } else {
+          content = appendToContent(String(value), content);
+        }
+        return;
+      }
       let attr = this.attrs[propName];
       if (attr) {
         if (attr.type === 'BooleanLiteral' || attr.type === 'NullLiteral' || attr.type === 'UndefinedLiteral') {
@@ -200,24 +214,34 @@ export default class BuildTimeComponent {
     this.attributeBindings.forEach((binding) => {
       let [propName, attrName, valueWhenTrue] = binding.split(':');
       attrName = attrName || propName;
-      let attrContent = this[propName];
-      if (attrContent === undefined) {
-        let attr = this.attrs[propName];
-        if (attr === undefined) {
-          let defaultValue = this.options[propName] || this.defaults[propName];
-          if (defaultValue !== undefined && defaultValue !== null) {
-            if (typeof defaultValue === 'boolean') {
-              attrContent = defaultValue ? (valueWhenTrue || 'true') : undefined;
-            } else {
-              attrContent = valueWhenTrue ? valueWhenTrue : defaultValue;
-            }
-          }
-        } else if (attr.type === 'PathExpression' && valueWhenTrue) {
-          attrContent = b.mustache(b.path('if'), [attr, b.string(valueWhenTrue)])
-        } else if (attr.type === 'BooleanLiteral' && valueWhenTrue) {
-          attrContent = attr.value ? valueWhenTrue : undefined;
+      let attrContent;
+      if (this[`${propName}Content`]) {
+        let value = this[`${propName}Content`]();
+        if (value === undefined || value === null || typeof value === 'boolean' || valueWhenTrue) {
+          attrContent = value ? (valueWhenTrue || 'true') : undefined;
         } else {
-          attrContent = valueWhenTrue ? valueWhenTrue : attr;
+          attrContent = value;
+        }
+      } else {
+        attrContent = this[propName];
+        if (attrContent === undefined) {
+          let attr = this.attrs[propName];
+          if (attr === undefined) {
+            let defaultValue = this.options[propName] || this.defaults[propName];
+            if (defaultValue !== undefined && defaultValue !== null) {
+              if (typeof defaultValue === 'boolean') {
+                attrContent = defaultValue ? (valueWhenTrue || 'true') : undefined;
+              } else {
+                attrContent = valueWhenTrue ? valueWhenTrue : defaultValue;
+              }
+            }
+          } else if (attr.type === 'PathExpression' && valueWhenTrue) {
+            attrContent = b.mustache(b.path('if'), [attr, b.string(valueWhenTrue)])
+          } else if (attr.type === 'BooleanLiteral' && valueWhenTrue) {
+            attrContent = attr.value ? valueWhenTrue : undefined;
+          } else {
+            attrContent = valueWhenTrue ? valueWhenTrue : attr;
+          }
         }
       }
       let attr = buildAttr(attrName, attrContent)

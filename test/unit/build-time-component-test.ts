@@ -353,11 +353,9 @@ describe('BuildTimeComponent', function() {
     expect(modifiedTemplate).toEqual(`<div class="on-duty"></div>`);
   });
 
-  it('the `<propName>` getter is used if no runtime or create time option wins over it', function() {
+  it('the `<propName>` attribute is used if no runtime or create time option wins over it', function() {
     class SubComponent extends BuildTimeComponent {
-      get isActive() {
-        return true;
-      }
+      isActive = true
     }
 
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
@@ -370,6 +368,9 @@ describe('BuildTimeComponent', function() {
         }
       }
     });
+
+    expect(modifiedTemplate).toEqual(`<div class="on-duty"></div>`);
+
     class AnotherSubComponent extends BuildTimeComponent {
       get isActive() {
         return 'yes';
@@ -388,6 +389,32 @@ describe('BuildTimeComponent', function() {
     });
 
     expect(modifiedTemplate).toEqual(`<div class="yes"></div>`);
+  });
+
+  it('the `<propName>Content` function trumps over runtime arguments, initialization options or getters', function() {
+    class SubComponent extends BuildTimeComponent {
+      isActive = false
+    }
+    class SubSubComponent extends BuildTimeComponent {
+      isActive = false
+      isActiveContent() {
+        return true; // this will trump over everything
+      }
+    }
+
+    let modifiedTemplate = processTemplate(`{{my-component isActive=false}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new SubSubComponent(node, {
+            classNameBindings: ['isActive:on-duty:reservist'],
+            isActive: false
+          });
+          return component.toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div class="on-duty"></div>`);
   });
 
   // attributeBindings
@@ -503,6 +530,46 @@ describe('BuildTimeComponent', function() {
     });
 
     expect(modifiedTemplate).toEqual(`<div disabled="nope"></div>`);
+  });
+
+  it('the `<propName>Content` function trumps over runtime arguments, initialization options or getters', function() {
+    class SubComponent extends BuildTimeComponent {
+      isActive = 'nope'
+    }
+    class SubSubComponent extends BuildTimeComponent {
+      isActive = 'nein'
+      isActiveContent() {
+        return 'yes'; // this will trump over everything
+      }
+    }
+
+    let modifiedTemplate = processTemplate(`{{my-component isActive=false}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new SubSubComponent(node, {
+            attributeBindings: ['isActive:is-active'],
+            isActive: 'non'
+          });
+          return component.toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div is-active="yes"></div>`);
+
+    modifiedTemplate = processTemplate(`{{my-component isActive=false}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new SubSubComponent(node, {
+            attributeBindings: ['isActive:is-active:si'],
+            isActive: 'non'
+          });
+          return component.toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div is-active="si"></div>`);
   });
 
   // block transform
