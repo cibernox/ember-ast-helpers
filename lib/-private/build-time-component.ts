@@ -76,24 +76,22 @@ const defaultOptions : BuildTimeComponentOptions = {
 export default class BuildTimeComponent {
   node: BuildTimeComponentNode
   defaults = Object.assign({}, defaultOptions)
-  overrides: Partial<BuildTimeComponentOptions>
+  options: Partial<BuildTimeComponentOptions>
   attrs: { [key: string]: AST.Literal | AST.PathExpression | AST.SubExpression }
   _contentVisitor?: NodeVisitor
   [key: string]: any
 
-  constructor(node: BuildTimeComponentNode, overrides: Partial<BuildTimeComponentOptions> = {}) {
+  constructor(node: BuildTimeComponentNode, options: Partial<BuildTimeComponentOptions> = {}) {
     this.node = node;
-    this.overrides = overrides;
+    this.options = options;
     this.attrs = {};
     this._populateAttrs(node);
-    // this.defaults = Object.assign({}, defaultOptions, defaults);
-    // this.defaults.attributeBindings = defaultOptions.attributeBindings.concat(options.attributeBindings || []);
   }
 
   get tagName(): string {
     let tagName = this.attrs.tagName;
     if (tagName === undefined) {
-      return this.overrides.tagName || this.defaults.tagName;
+      return this.options.tagName || this.defaults.tagName;
     } else if (tagName.type === 'StringLiteral') {
       return tagName.value;
     } else {
@@ -105,7 +103,7 @@ export default class BuildTimeComponent {
   }
 
   get contentVisitor(): NodeVisitor | undefined {
-    return this._contentVisitor || this.overrides.contentVisitor;
+    return this._contentVisitor || this.options.contentVisitor;
   }
   set contentVisitor(visitor: NodeVisitor | undefined) {
     this._contentVisitor = visitor;
@@ -155,7 +153,7 @@ export default class BuildTimeComponent {
           }
         }
       } else {
-        let propValue = this.overrides[propName] !== undefined ? this.overrides[propName] : this.defaults[propName];
+        let propValue = this.options[propName] !== undefined ? this.options[propName] : this.defaults[propName];
         if (propValue === undefined) {
           propValue = this[propName];
         }
@@ -176,24 +174,24 @@ export default class BuildTimeComponent {
 
   // Concatenated properties
   get attributeBindings() {
-    return this.defaults.attributeBindings.concat(this.overrides.attributeBindings || [])
+    return this.defaults.attributeBindings.concat(this.options.attributeBindings || [])
   }
   set attributeBindings(bindings: string[]) {
-    this.overrides.attributeBindings = uniq(this.overrides.attributeBindings || []).concat(bindings);
+    this.options.attributeBindings = uniq(this.options.attributeBindings || []).concat(bindings);
   }
 
   get classNames() {
-    return this.defaults.classNames.concat(this.overrides.classNames || [])
+    return this.defaults.classNames.concat(this.options.classNames || [])
   }
   set classNames(classNames: string[]) {
-    this.overrides.classNames = uniq((this.overrides.classNames || []).concat(classNames));
+    this.options.classNames = uniq((this.options.classNames || []).concat(classNames));
   }
 
   get classNameBindings() {
-    return this.defaults.classNameBindings.concat(this.overrides.classNameBindings || [])
+    return this.defaults.classNameBindings.concat(this.options.classNameBindings || [])
   }
   set classNameBindings(classNameBindings: string[]) {
-    this.overrides.classNameBindings = uniq((this.overrides.classNameBindings || []).concat(classNameBindings));
+    this.options.classNameBindings = uniq((this.options.classNameBindings || []).concat(classNameBindings));
   }
 
   // Node getters
@@ -206,7 +204,7 @@ export default class BuildTimeComponent {
       if (attrContent === undefined) {
         let attr = this.attrs[propName];
         if (attr === undefined) {
-          let defaultValue = this.overrides[propName] || this.defaults[propName];
+          let defaultValue = this.options[propName] || this.defaults[propName];
           if (defaultValue !== undefined && defaultValue !== null) {
             if (typeof defaultValue === 'boolean') {
               attrContent = defaultValue ? (valueWhenTrue || 'true') : undefined;
