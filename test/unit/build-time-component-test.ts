@@ -2,6 +2,7 @@
 
 import processTemplate from '../helpers/process-template';
 import { BuildTimeComponent } from '../../lib';
+import { builders as b, AST } from '@glimmer/syntax';
 
 describe('BuildTimeComponent', function() {
   // tagName
@@ -349,5 +350,24 @@ describe('BuildTimeComponent', function() {
     });
 
     expect(modifiedTemplate).toEqual(`<div><span>Inner content</span></div>`);
-  })
+  });
+
+  it('transforms the block with the given visitor if provided', function() {
+    let modifiedTemplate = processTemplate(`{{#my-component title=boundValue}}<span>Inner content</span>{{/my-component}}<span>outside span</span>`, {
+      BlockStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new BuildTimeComponent(node, {
+            contentVisitor: {
+              ElementNode(node: AST.ElementNode) {
+                return b.element('strong', [], [], node.children);
+              }
+            }
+          });
+          return component.toNode();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div><strong>Inner content</strong></div><span>outside span</span>`);
+  });
 });

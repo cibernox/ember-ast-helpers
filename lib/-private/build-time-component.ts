@@ -2,7 +2,9 @@ import appendToContent from './append-to-content';
 import buildAttr from './build-attr';
 import {
   builders as b,
-  AST
+  traverse,
+  AST,
+  NodeVisitor
 } from '@glimmer/syntax';
 
 function dashify(str: string): string {
@@ -20,6 +22,7 @@ export type BuildTimeComponentOptions = {
   ariaLabel: string | undefined | null
   classNameBindings: string[]
   attributeBindings: string[]
+  contentVisitor?: NodeVisitor
   [key: string]: any
 }
 
@@ -30,7 +33,8 @@ const defaultOptions : BuildTimeComponentOptions = {
   title: undefined,
   ariaLabel: undefined,
   classNameBindings: [],
-  attributeBindings: ['class']
+  attributeBindings: ['class'],
+  nodeVisitor: undefined
 }
 
 /**
@@ -69,10 +73,12 @@ const defaultOptions : BuildTimeComponentOptions = {
 export default class BuildTimeComponent {
   node: AST.MustacheStatement | AST.BlockStatement
   options: BuildTimeComponentOptions
+  contentVisitor?: NodeVisitor
   [key: string]: any
 
   constructor(node: AST.MustacheStatement | AST.BlockStatement, options: Partial<BuildTimeComponentOptions> = {}) {
     this.node = node;
+    this.contentVisitor = options.contentVisitor;
     this.options = Object.assign({}, defaultOptions, options);
     this.options.attributeBindings = defaultOptions.attributeBindings.concat(options.attributeBindings || []);
   }
@@ -129,6 +135,9 @@ export default class BuildTimeComponent {
 
   get children(): AST.Statement[] {
     if (this.node.type === 'BlockStatement') {
+      if (this.contentVisitor) {
+        traverse(this.node.program, this.contentVisitor)
+      }
       return this.node.program.body;
     } else {
       return [];
