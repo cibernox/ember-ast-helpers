@@ -46,10 +46,7 @@
     "node": ">= 6"
   },
   "jest": {
-    "moduleFileExtensions": [
-      "ts",
-      "js"
-    ],
+    "moduleFileExtensions": ["js"],
     "testMatch": [
       "<rootDir>/dist/test/**/*-test.js"
     ]
