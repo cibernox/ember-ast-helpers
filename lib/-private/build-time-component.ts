@@ -130,7 +130,7 @@ export default class BuildTimeComponent {
             content = appendToContent(falsyClass, content);
           }
         } else {
-          content = appendToContent(String(value), content);
+          content = appendToContent(value, content);
         }
         return;
       }
@@ -144,7 +144,7 @@ export default class BuildTimeComponent {
             content = appendToContent(falsyClass, content);
           }
         } else if (attr.type === 'StringLiteral' || attr.type === 'NumberLiteral') {
-          content = appendToContent(String(attr.value), content);
+          content = appendToContent(attr.value, content);
         } else if (attr.type === 'PathExpression') {
           if (truthyClass) {
             let mustacheArgs = [attr, b.string(truthyClass)];
