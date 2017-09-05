@@ -36,6 +36,7 @@
     "lodash": "^4.17.4"
   },
   "devDependencies": {
+    "@types/ember": "^2.7.44",
     "@types/jest": "^20.0.8",
     "@types/lodash": "^4.14.74",
     "eslint-plugin-node": "^5.1.0",

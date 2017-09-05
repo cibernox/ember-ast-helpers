@@ -110,13 +110,33 @@
   dependencies:
     "@glimmer/util" "^0.27.0"
 
+"@types/ember@^2.7.44":
+  version "2.7.44"
+  resolved "https://registry.yarnpkg.com/@types/ember/-/ember-2.7.44.tgz#eaebfcc9c8100a4e060840c95046c8c68218edcd"
+  dependencies:
+    "@types/handlebars" "*"
+    "@types/jquery" "*"
+    "@types/rsvp" "*"
+
+"@types/handlebars@*":
+  version "4.0.36"
+  resolved "https://registry.yarnpkg.com/@types/handlebars/-/handlebars-4.0.36.tgz#ff57c77fa1ab6713bb446534ddc4d979707a3a79"
+
 "@types/jest@^20.0.8":
   version "20.0.8"
   resolved "https://registry.yarnpkg.com/@types/jest/-/jest-20.0.8.tgz#7f8c97f73d20d3bf5448fbe33661a342002b5954"
 
+"@types/jquery@*":
+  version "3.2.12"
+  resolved "https://registry.yarnpkg.com/@types/jquery/-/jquery-3.2.12.tgz#f496823108c3874c97c9a822e675a3926ee64b46"
+
 "@types/lodash@^4.14.74":
   version "4.14.74"
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.74.tgz#ac3bd8db988e7f7038e5d22bd76a7ba13f876168"
+
+"@types/rsvp@*":
+  version "3.3.2"
+  resolved "https://registry.yarnpkg.com/@types/rsvp/-/rsvp-3.3.2.tgz#320020a9a5a6a71e99d852fa88df43bd9f878278"
 
 abab@^1.0.3:
   version "1.0.3"
