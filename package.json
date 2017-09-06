@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "@glimmer/compiler": "^0.27.0",
+    "@glimmer/object": "^0.27.0",
     "@glimmer/syntax": "^0.27.0",
     "lodash": "^4.17.4"
   },
@@ -51,8 +52,6 @@
     "moduleFileExtensions": [
       "js"
     ],
-    "testMatch": [
-      "<rootDir>/dist/test/**/*-test.js"
-    ]
+    "testMatch": ["**/dist/test/**/*.js?(x)"]
   }
 }
