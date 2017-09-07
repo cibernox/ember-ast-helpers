@@ -6,7 +6,7 @@ import {
   AST,
   NodeVisitor
 } from '@glimmer/syntax';
-import { uniq } from 'lodash';
+// import { uniq } from 'lodash';
 
 function dashify(str: string): string {
   str = str.replace(/([a-z])([A-Z])/g, '$1-$2');
@@ -190,26 +190,26 @@ export default class BuildTimeComponent {
   get attributeBindings() {
     return this.defaults.attributeBindings.concat(this.options.attributeBindings || [])
   }
-  set attributeBindings(bindings: string[]) {
-    this.options.attributeBindings = uniq(this.options.attributeBindings || []).concat(bindings);
+  set attributeBindings(attributeBindings: string[]) {
+    this.defaults.attributeBindings = this.defaults.attributeBindings.concat(attributeBindings);
   }
 
   get classNames() {
     return this.defaults.classNames.concat(this.options.classNames || [])
   }
   set classNames(classNames: string[]) {
-    this.options.classNames = uniq((this.options.classNames || []).concat(classNames));
+    this.defaults.classNames = this.defaults.classNames.concat(classNames);
   }
 
   get classNameBindings() {
     return this.defaults.classNameBindings.concat(this.options.classNameBindings || [])
   }
   set classNameBindings(classNameBindings: string[]) {
-    this.options.classNameBindings = uniq((this.options.classNameBindings || []).concat(classNameBindings));
+    this.defaults.classNameBindings = this.defaults.classNameBindings.concat(classNameBindings);
   }
 
-  // Node getters
-  get nodeAttrs(): AST.AttrNode[] {
+  // Element getters
+  get elementAttrs(): AST.AttrNode[] {
     let attrs: AST.AttrNode[] = [];
     this.attributeBindings.forEach((binding) => {
       let [propName, attrName, valueWhenTrue] = binding.split(':');
@@ -252,11 +252,11 @@ export default class BuildTimeComponent {
     return attrs;
   }
 
-  get nodeModifiers(): AST.ElementModifierStatement[] {
+  get elementModifiers(): AST.ElementModifierStatement[] {
     return [];
   }
 
-  get nodeChildren(): AST.Statement[] {
+  get elementChildren(): AST.Statement[] {
     if (this.node.type === 'BlockStatement') {
       if (this.contentVisitor) {
         traverse(this.node.program, this.contentVisitor)
@@ -268,7 +268,7 @@ export default class BuildTimeComponent {
   }
 
   toElement(): AST.ElementNode {
-    return b.element(this.tagName, this.nodeAttrs, this.nodeModifiers, this.nodeChildren);
+    return b.element(this.tagName, this.elementAttrs, this.elementModifiers, this.elementChildren);
   }
 
   // private

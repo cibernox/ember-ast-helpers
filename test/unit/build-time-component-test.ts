@@ -88,7 +88,7 @@ describe('BuildTimeComponent', function() {
     expect(modifiedTemplate).toEqual(`<div class="foo bar"></div>`);
   });
 
-  it('classNames are treated as concatenated properties', function() {
+  it('classNames are treated as concatenated properties, in the order they where declared', function() {
     class MyComponent extends BuildTimeComponent {
       classNames = ['foo', 'bar']
     }
@@ -102,7 +102,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div class="qux foo bar foobar"></div>`);
+    expect(modifiedTemplate).toEqual(`<div class="foo bar foobar qux"></div>`);
   });
 
   it('concatenates the default classes and the additional strings passed with the `class` option', function() {
@@ -452,7 +452,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div foo="bar" title="sample title" aria-label="sample label"></div>`);
+    expect(modifiedTemplate).toEqual(`<div title="sample title" aria-label="sample label" foo="bar"></div>`);
   });
 
   it('binds properties passed to the constructor to the right attribute', function() {
