@@ -155,6 +155,30 @@ export default class BuildTimeComponent {
   }
 
   // Element getters
+
+  /**
+   * There is two kind of attributeBindings, boolean or regular.
+   *
+   * Boolean:
+   * - `attributeBinding: ['active:on-duty:reservist']`
+   *   when true => `<div active="on-duty">`
+   *   when false => `<div active="reservist">`
+   *   when dynamic => `<div active={{if active 'on-duty' 'reservist'}}>`
+   * - `attributeBinding: ['active:on-duty']`
+   *   when true => `<div active="on-duty">`
+   *   when false => `<div>`
+   *   when dynamic => `<div active={{if active 'on-duty'}}>`
+   * - `attributeBinding: ['active']` but we can determine statically that `active` is expected
+   *   to be a boolean:
+   *   when true => `<div active="true">`
+   *   when false => `<div>`
+   *   when dynamic => `<div active={{if active 'true'}}>`
+   *
+   * Regular:
+   * - `attributeBinding: ['title']` and we can't determine that title is a boolean in compile time
+   *   When the value is static => `<div title="some text">`
+   *   When the value is dynamic => `<div title={{title}}>`
+   */
   get elementAttrs(): AST.AttrNode[] {
     let attrs: AST.AttrNode[] = [];
     this.attributeBindings.forEach((binding) => {
