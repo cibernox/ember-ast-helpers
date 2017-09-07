@@ -480,16 +480,16 @@ describe('BuildTimeComponent', function() {
 
     expect(modifiedTemplate).toEqual(`<div title="has-title"></div>`);
 
-    // modifiedTemplate = processTemplate(`{{my-component}}`, {
-    //   MustacheStatement(node) {
-    //     return new BuildTimeComponent(node, {
-    //       title: false,
-    //       attributeBindings: ['title:title:has-title:no-title']
-    //     }).toElement();
-    //   }
-    // });
+    modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        return new BuildTimeComponent(node, {
+          title: false,
+          attributeBindings: ['title:title:has-title:no-title']
+        }).toElement();
+      }
+    });
 
-    // expect(modifiedTemplate).toEqual(`<div title="no-title"></div>`);
+    expect(modifiedTemplate).toEqual(`<div title="no-title"></div>`);
   });
 
   it('binds properties passed on invocation over those passed in the controller', function() {

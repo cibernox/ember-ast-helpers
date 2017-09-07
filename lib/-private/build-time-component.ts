@@ -139,7 +139,7 @@ export default class BuildTimeComponent {
     this._contentVisitor = visitor;
   }
 
-  get class(): AttrValue | undefined {
+  classContent(): AttrValue | undefined {
     let content: AttrValue | undefined;
     if (this.classNames.length > 0) {
       content = appendToContent(this.classNames.join(' '), content)
@@ -186,42 +186,35 @@ export default class BuildTimeComponent {
   get elementAttrs(): AST.AttrNode[] {
     let attrs: AST.AttrNode[] = [];
     this.attributeBindings.forEach((binding) => {
-      // let [propName, attrName, valueWhenTrue, valueWhenFalse] = binding.split(':');
-      // let isBooleanBinding = attrName !== undefined;
+      let {
+        isBooleanBinding,
+        computedValue,
+        staticValue,
+        attrValue,
+        attrName,
+        propName,
+        truthyValue,
+        falsyValue
+      } = this._analyzeBinding(binding, { propertyAlias: true });
 
-      let [propName, attrName, valueWhenTrue] = binding.split(':');
-      attrName = attrName || propName;
-      let attrContent;
-      if (this[`${propName}Content`]) {
-        let value = this[`${propName}Content`]();
-        if (value === undefined || value === null || typeof value === 'boolean' || valueWhenTrue) {
-          attrContent = value ? (valueWhenTrue || 'true') : undefined;
+      let content;
+      if (isBooleanBinding) {
+        truthyValue = truthyValue || 'true';
+        if (computedValue !== undefined) {
+          content = computedValue ? truthyValue : falsyValue;
+        } else if (attrValue !== undefined) {
+          if (AST.isLiteral(attrValue)) {
+            content = attrValue.value ? truthyValue : falsyValue;
+          } else {
+            content = buildConditional(attrValue, truthyValue, falsyValue)
+          }
         } else {
-          attrContent = value;
+          content = staticValue ? truthyValue : falsyValue;
         }
       } else {
-        attrContent = this[propName];
-        if (attrContent === undefined) {
-          let attr = this.attrs[propName];
-          if (attr === undefined) {
-            let defaultValue = this.options[propName] || this.defaults[propName];
-            if (defaultValue !== undefined && defaultValue !== null) {
-              if (typeof defaultValue === 'boolean') {
-                attrContent = defaultValue ? (valueWhenTrue || 'true') : undefined;
-              } else {
-                attrContent = valueWhenTrue ? valueWhenTrue : defaultValue;
-              }
-            }
-          } else if (attr.type === 'PathExpression' && valueWhenTrue) {
-            attrContent = b.mustache(b.path('if'), [attr, b.string(valueWhenTrue)])
-          } else if (attr.type === 'BooleanLiteral' && valueWhenTrue) {
-            attrContent = attr.value ? valueWhenTrue : undefined;
-          } else {
-            attrContent = valueWhenTrue ? valueWhenTrue : attr;
-          }
-        }
+        content = computedValue || attrValue || staticValue;
       }
-      let attr = buildAttr(attrName, attrContent)
+      let attr = buildAttr(<string>attrName, content);
       if (attr !== null) {
         attrs.push(attr);
       }
@@ -285,53 +278,83 @@ export default class BuildTimeComponent {
    */
   _applyClassNameBindings(content: AttrValue | undefined): AttrValue | undefined {
     this.classNameBindings.forEach((binding) => {
-      let bindingParts = binding.split(':');
-      let isBooleanBinding = bindingParts.length > 1;
-      let [propName, truthyClass, falsyClass] = bindingParts;
-      let attr = this.attrs[propName];
-      let computedValue, staticValue;
-      if (this[`${propName}Content`]) {
-        computedValue = this[`${propName}Content`]();
-      } else {
-        staticValue = this.options[propName] !== undefined ? this.options[propName] : this.defaults[propName];
-        if (staticValue === undefined) {
-          staticValue = this[propName];
-        }
-      }
-      if (!isBooleanBinding) {
-        if (typeof computedValue === 'boolean') {
-          isBooleanBinding = true;
-        }
-        if (!isBooleanBinding && staticValue === undefined && attr !== undefined && attr.type === 'BooleanLiteral') {
-          isBooleanBinding = true;
-        } else {
-          isBooleanBinding = typeof staticValue === 'boolean';
-        }
-      }
+      let {
+        isBooleanBinding,
+        computedValue,
+        staticValue,
+        attrValue,
+        propName,
+        truthyValue,
+        falsyValue
+      } = this._analyzeBinding(binding, { propertyAlias: false });
 
       if (isBooleanBinding) {
-        truthyClass = truthyClass || dashify(propName);
-        if (computedValue) {
-          let part = computedValue ? truthyClass : falsyClass;
+        truthyValue = truthyValue || dashify(propName);
+        if (computedValue !== undefined) {
+          let part = computedValue ? truthyValue : falsyValue;
           if (part) {
             content = appendToContent(part, content);
           }
-        } else if (attr) {
-          if (AST.isLiteral(attr)) {
-            let part = attr.value ? truthyClass : falsyClass;
+        } else if (attrValue !== undefined) {
+          if (AST.isLiteral(attrValue)) {
+            let part = attrValue.value ? truthyValue : falsyValue;
             if (part) {
               content = appendToContent(part, content);
             }
           } else {
-            content = appendToContent(buildConditional(attr, truthyClass, falsyClass), content)
+            content = appendToContent(buildConditional(attrValue, truthyValue, falsyValue), content)
           }
         } else {
-          content = appendToContent(staticValue ? truthyClass : falsyClass, content);
+          content = appendToContent(staticValue ? truthyValue : falsyValue, content);
         }
       } else {
-        content = appendToContent(computedValue || attr || staticValue, content);
+        content = appendToContent(computedValue || attrValue || staticValue, content);
       }
     });
     return content;
+  }
+
+  _analyzeBinding(binding: string, { propertyAlias = true } = {}) {
+    let bindingParts = binding.split(':');
+    let isBooleanBinding = bindingParts.length > (propertyAlias ? 2 : 1);
+    let [propName] = bindingParts;
+    let attrValue = this.attrs[propName];
+    let computedValue, staticValue;
+    if (this[`${propName}Content`]) {
+      computedValue = this[`${propName}Content`]();
+    } else {
+      staticValue = this.options[propName] !== undefined ? this.options[propName] : this.defaults[propName];
+      if (staticValue === undefined) {
+        staticValue = this[propName];
+      }
+    }
+    if (!isBooleanBinding) {
+      if (computedValue !== undefined) {
+        isBooleanBinding = typeof computedValue === 'boolean';
+      } else if (staticValue === undefined && attrValue !== undefined && attrValue.type === 'BooleanLiteral') {
+        isBooleanBinding = true;
+      } else {
+        isBooleanBinding = typeof staticValue === 'boolean';
+      }
+    }
+    let attrName, truthyValue, falsyValue;
+    if (propertyAlias) {
+      [attrName, truthyValue, falsyValue] = bindingParts.slice(1)
+      if (attrName === undefined) {
+        attrName = propName;
+      }
+    } else {
+      [truthyValue, falsyValue] = bindingParts.slice(1)
+    }
+    return {
+      isBooleanBinding,
+      computedValue,
+      staticValue,
+      attrValue,
+      propName,
+      attrName,
+      truthyValue,
+      falsyValue
+    };
   }
 }
