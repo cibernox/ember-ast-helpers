@@ -224,6 +224,34 @@ export default class BuildTimeComponent {
     });
   }
 
+  /**
+   * There is two possible kinds of classNameBindings: boolean or regular
+   *
+   * Boolean bindings are those that must be interpreted by the truthyness or falsyness of the
+   * property they are bound to.
+   *
+   * A bindings is deemed boolean when either of this conditions is met:
+   * - If the binding definition contains truthy or falsy values, it always considered boolean,
+   *   regardless of the type of value on that property. E.g: `classNameBindings: ['enabled:on:off']`
+   *
+   * - If the binding has no truthy/falsy values but its property has been initialized to a boolean
+   *   value, then it's reasonably safe that the developer expects it to be a boolean. In that case,
+   *   just like Ember.Component does, the truthy value will be the dasherized name of the property,
+   *   and when false, it won't have a false value.
+   *   E.g. `new BuildTimeComponent(node, { classNameBindings: ['isActive'], isActive: true })` will
+   *   generate `<div class="is-active"></div>`. If the component is invoked with a dynamic value
+   *   on that property (`{{my-foo isActive=condition}}`) it generates `<div class={{if condition "is-active"}}></div>`
+   *
+   * - If the binding doesn't have truthy/falsy values, and the property hasn't been initialized to
+   *   a boolean value, but the invocation passed the property as a boolean literal, it's also
+   *   considered a boolean.
+   *   E.g. `new BuildTimeComponent(node, { classNameBindings: ['isActive']})` invoked with
+   *   `{{my-foo isActive=true}}` will generate `<div class="is-active"></div>`
+   *
+   * Regular bindings are simpler than that. If the value is just added to the class. If we can
+   * determine the value in compile time, it will generate `<div class="a b c propValue"></div>`,
+   * and if it can't, it will be interpolated `<div class="a b c {{prop}}"></div>`
+   */
   _applyClassNameBindings(content: AttrValue | undefined): AttrValue | undefined {
     this.classNameBindings.forEach((binding) => {
       let bindingParts = binding.split(':');
