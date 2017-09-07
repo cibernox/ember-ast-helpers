@@ -1,5 +1,5 @@
 import appendToContent from './append-to-content';
-import buildAttr from './build-attr';
+import buildAttr, { AttrValue } from './build-attr';
 import {
   builders as b,
   traverse,
@@ -14,6 +14,16 @@ function dashify(str: string): string {
   str = str.replace(/^-+|-+$/g, '');
   return str.toLowerCase();
 };
+
+// TODO: Extract this helper to a public utility
+function buildConditional(cond: AST.PathExpression | AST.SubExpression, truthyValue: string, falsyValue: string | undefined): AST.MustacheStatement {
+  let mustacheArgs : AST.Expression[]= [cond];
+  mustacheArgs.push(b.string(truthyValue));
+  if (falsyValue) {
+    mustacheArgs.push(b.string(falsyValue));
+  }
+  return b.mustache(b.path('if'), mustacheArgs);
+}
 
 export type BuildTimeComponentOptions = {
   tagName: string
@@ -88,6 +98,7 @@ export default class BuildTimeComponent {
     this._populateAttrs(node);
   }
 
+  // Getters/setters to mimic Ember components
   get tagName(): string {
     let tagName = this.attrs.tagName;
     if (tagName === undefined) {
@@ -102,91 +113,6 @@ export default class BuildTimeComponent {
     this.defaults.tagName = str
   }
 
-  get contentVisitor(): NodeVisitor | undefined {
-    return this._contentVisitor || this.options.contentVisitor;
-  }
-  set contentVisitor(visitor: NodeVisitor | undefined) {
-    this._contentVisitor = visitor;
-  }
-
-  get class(): AST.TextNode | AST.MustacheStatement | AST.ConcatStatement | undefined {
-    let content: AST.TextNode | AST.MustacheStatement | AST.ConcatStatement | undefined;
-    if (this.classNames.length > 0) {
-      content = appendToContent(this.classNames.join(' '), content)
-    }
-    if (this.attrs.class !== undefined) {
-      content = appendToContent(this.attrs.class, content);
-    }
-    this.classNameBindings.forEach((binding) => {
-      let bindingParts = binding.split(':');
-      let [propName, truthyClass, falsyClass] = bindingParts;
-      if (this[`${propName}Content`]) {
-        let value = this[`${propName}Content`]();
-        if (value === null || value === undefined || typeof value === 'boolean') {
-          truthyClass = truthyClass || dashify(propName);
-          if (value) {
-            content = appendToContent(truthyClass, content);
-          } else if (falsyClass) {
-            content = appendToContent(falsyClass, content);
-          }
-        } else {
-          content = appendToContent(value, content);
-        }
-        return;
-      }
-      let attr = this.attrs[propName];
-      if (attr) {
-        if (attr.type === 'BooleanLiteral' || attr.type === 'NullLiteral' || attr.type === 'UndefinedLiteral') {
-          truthyClass = truthyClass || dashify(propName);
-          if (!!attr.value) {
-            content = appendToContent(truthyClass, content);
-          } else if (falsyClass) {
-            content = appendToContent(falsyClass, content);
-          }
-        } else if (attr.type === 'StringLiteral' || attr.type === 'NumberLiteral') {
-          content = appendToContent(attr.value, content);
-        } else if (attr.type === 'PathExpression') {
-          if (truthyClass) {
-            let mustacheArgs = [attr, b.string(truthyClass)];
-            if (falsyClass) {
-              mustacheArgs.push(b.string(falsyClass));
-            }
-            content = appendToContent(b.mustache(b.path('if'), mustacheArgs), content);
-          } else {
-            content = appendToContent(b.mustache(attr), content);
-          }
-        } else if (attr.type === 'SubExpression') {
-          if (truthyClass) {
-            let mustacheArgs = [attr, b.string(truthyClass)];
-            if (falsyClass) {
-              mustacheArgs.push(b.string(falsyClass));
-            }
-            content = appendToContent(b.mustache(b.path('if'), mustacheArgs), content);
-          } else {
-            content = appendToContent(b.mustache(attr.path, attr.params, attr.hash), content);
-          }
-        }
-      } else {
-        let propValue = this.options[propName] !== undefined ? this.options[propName] : this.defaults[propName];
-        if (propValue === undefined) {
-          propValue = this[propName];
-        }
-        if (typeof propValue === 'boolean' || truthyClass) {
-          truthyClass = truthyClass || dashify(propName);
-          if (propValue) {
-            content = appendToContent(truthyClass, content);
-          } else if (falsyClass) {
-            content = appendToContent(falsyClass, content);
-          }
-        } else if (propValue !== undefined) {
-          content = appendToContent(propValue, content);
-        }
-      }
-    });
-    return content;
-  }
-
-  // Concatenated properties
   get attributeBindings() {
     return this.defaults.attributeBindings.concat(this.options.attributeBindings || [])
   }
@@ -206,6 +132,26 @@ export default class BuildTimeComponent {
   }
   set classNameBindings(classNameBindings: string[]) {
     this.defaults.classNameBindings = this.defaults.classNameBindings.concat(classNameBindings);
+  }
+
+  // Internal methods
+  get contentVisitor(): NodeVisitor | undefined {
+    return this._contentVisitor || this.options.contentVisitor;
+  }
+  set contentVisitor(visitor: NodeVisitor | undefined) {
+    this._contentVisitor = visitor;
+  }
+
+  get class(): AttrValue | undefined {
+    let content: AttrValue | undefined;
+    if (this.classNames.length > 0) {
+      content = appendToContent(this.classNames.join(' '), content)
+    }
+    content = this._applyClassNameBindings(content);
+    if (this.attrs.class !== undefined) {
+      content = appendToContent(this.attrs.class, content);
+    }
+    return content;
   }
 
   // Element getters
@@ -276,5 +222,57 @@ export default class BuildTimeComponent {
     node.hash.pairs.forEach((pair) => {
       this.attrs[pair.key] = pair.value;
     });
+  }
+
+  _applyClassNameBindings(content: AttrValue | undefined): AttrValue | undefined {
+    this.classNameBindings.forEach((binding) => {
+      let bindingParts = binding.split(':');
+      let isBooleanBinding = bindingParts.length > 1;
+      let [propName, truthyClass, falsyClass] = bindingParts;
+      let attr = this.attrs[propName];
+      let computedValue, staticValue;
+      if (this[`${propName}Content`]) {
+        computedValue = this[`${propName}Content`]();
+      } else {
+        staticValue = this.options[propName] !== undefined ? this.options[propName] : this.defaults[propName];
+        if (staticValue === undefined) {
+          staticValue = this[propName];
+        }
+      }
+      if (!isBooleanBinding) {
+        if (typeof computedValue === 'boolean') {
+          isBooleanBinding = true;
+        }
+        if (!isBooleanBinding && staticValue === undefined && attr !== undefined && attr.type === 'BooleanLiteral') {
+          isBooleanBinding = true;
+        } else {
+          isBooleanBinding = typeof staticValue === 'boolean';
+        }
+      }
+
+      if (isBooleanBinding) {
+        truthyClass = truthyClass || dashify(propName);
+        if (computedValue) {
+          let part = computedValue ? truthyClass : falsyClass;
+          if (part) {
+            content = appendToContent(part, content);
+          }
+        } else if (attr) {
+          if (AST.isLiteral(attr)) {
+            let part = attr.value ? truthyClass : falsyClass;
+            if (part) {
+              content = appendToContent(part, content);
+            }
+          } else {
+            content = appendToContent(buildConditional(attr, truthyClass, falsyClass), content)
+          }
+        } else {
+          content = appendToContent(staticValue ? truthyClass : falsyClass, content);
+        }
+      } else {
+        content = appendToContent(computedValue || attr || staticValue, content);
+      }
+    });
+    return content;
   }
 }
