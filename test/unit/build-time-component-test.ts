@@ -9,8 +9,7 @@ describe('BuildTimeComponent', function() {
   it('generates a div by default', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        let component = new BuildTimeComponent(node);
-        return component.toNode();
+        return new BuildTimeComponent(node).toElement();
       }
     });
 
@@ -20,8 +19,7 @@ describe('BuildTimeComponent', function() {
   it('honors the default tagName passed to the constructor', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        let component = new BuildTimeComponent(node, { tagName: 'i' });
-        return component.toNode();
+        return new BuildTimeComponent(node, { tagName: 'i' }).toElement();
       }
     });
 
@@ -31,8 +29,7 @@ describe('BuildTimeComponent', function() {
   it('honors tagName received over any default', function() {
     let modifiedTemplate = processTemplate(`{{my-component tagName="span"}}`, {
       MustacheStatement(node) {
-        let component = new BuildTimeComponent(node, { tagName: 'i' });
-        return component.toNode();
+        return new BuildTimeComponent(node, { tagName: 'i' }).toElement();
       }
     });
 
@@ -46,7 +43,7 @@ describe('BuildTimeComponent', function() {
 
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        return new MyComponent(node).toNode();
+        return new MyComponent(node).toElement();
       }
     });
 
@@ -60,7 +57,7 @@ describe('BuildTimeComponent', function() {
 
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        return new MyComponent(node, { tagName: 'span' }).toNode();
+        return new MyComponent(node, { tagName: 'span' }).toElement();
       }
     });
 
@@ -71,8 +68,7 @@ describe('BuildTimeComponent', function() {
   it('honors the default classNames passed to the constructor', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        let component = new BuildTimeComponent(node, { classNames: ['foo', 'bar'] });
-        return component.toNode();
+        return new BuildTimeComponent(node, { classNames: ['foo', 'bar'] }).toElement();
       }
     });
 
@@ -85,7 +81,7 @@ describe('BuildTimeComponent', function() {
     }
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        return new MyComponent(node).toNode();
+        return new MyComponent(node).toElement();
       }
     });
 
@@ -102,7 +98,7 @@ describe('BuildTimeComponent', function() {
 
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        return new MySubComponent(node, { classNames: ['qux'] }).toNode();
+        return new MySubComponent(node, { classNames: ['qux'] }).toElement();
       }
     });
 
@@ -113,8 +109,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component class="extra-class"}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, { classNames: ['foo', 'bar'] });
-          return component.toNode();
+          return new BuildTimeComponent(node, { classNames: ['foo', 'bar'] }).toElement();
         }
       }
     });
@@ -126,8 +121,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component class=extraClass}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, { classNames: ['foo', 'bar'] });
-          return component.toNode();
+          return new BuildTimeComponent(node, { classNames: ['foo', 'bar'] }).toElement();
         }
       }
     });
@@ -139,8 +133,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component class=(concat 'a' 'b')}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, { classNames: ['foo', 'bar'] });
-          return component.toNode();
+          return new BuildTimeComponent(node, { classNames: ['foo', 'bar'] }).toElement();
         }
       }
     });
@@ -153,8 +146,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component isActive=true}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, { classNameBindings: ['isActive'] });
-          return component.toNode();
+          return new BuildTimeComponent(node, { classNameBindings: ['isActive'] }).toElement();
         }
       }
     });
@@ -164,8 +156,7 @@ describe('BuildTimeComponent', function() {
     modifiedTemplate = processTemplate(`{{my-component isActive=false}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, { classNameBindings: ['isActive'] });
-          return component.toNode();
+          return new BuildTimeComponent(node, { classNameBindings: ['isActive'] }).toElement();
         }
       }
     });
@@ -176,8 +167,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component isActive=isActive}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, { classNameBindings: ['isActive'] });
-          return component.toNode();
+          return new BuildTimeComponent(node, { classNameBindings: ['isActive'] }).toElement();
         }
       }
     });
@@ -189,8 +179,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component isActive=isActive}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, { classNameBindings: ['isActive:is-active'] });
-          return component.toNode();
+          return new BuildTimeComponent(node, { classNameBindings: ['isActive:is-active'] }).toElement();
         }
       }
     });
@@ -202,8 +191,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component isActive=true}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, { classNameBindings: ['isActive:on-duty'] });
-          return component.toNode();
+          return new BuildTimeComponent(node, { classNameBindings: ['isActive:on-duty'] }).toElement();
         }
       }
     });
@@ -213,8 +201,7 @@ describe('BuildTimeComponent', function() {
     modifiedTemplate = processTemplate(`{{my-component isActive=false}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, { classNameBindings: ['isActive:on-duty'] });
-          return component.toNode();
+          return new BuildTimeComponent(node, { classNameBindings: ['isActive:on-duty'] }).toElement();
         }
       }
     });
@@ -224,8 +211,7 @@ describe('BuildTimeComponent', function() {
     modifiedTemplate = processTemplate(`{{my-component isActive=isActive}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, { classNameBindings: ['isActive:on-duty'] });
-          return component.toNode();
+          return new BuildTimeComponent(node, { classNameBindings: ['isActive:on-duty'] }).toElement();
         }
       }
     });
@@ -237,8 +223,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component isActive=true}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, { classNameBindings: ['isActive:on-duty:reservist'] });
-          return component.toNode();
+          return new BuildTimeComponent(node, { classNameBindings: ['isActive:on-duty:reservist'] }).toElement();
         }
       }
     });
@@ -248,8 +233,7 @@ describe('BuildTimeComponent', function() {
     modifiedTemplate = processTemplate(`{{my-component isActive=false}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, { classNameBindings: ['isActive:on-duty:reservist'] });
-          return component.toNode();
+          return new BuildTimeComponent(node, { classNameBindings: ['isActive:on-duty:reservist'] }).toElement();
         }
       }
     });
@@ -259,8 +243,7 @@ describe('BuildTimeComponent', function() {
     modifiedTemplate = processTemplate(`{{my-component isActive=isActive}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, { classNameBindings: ['isActive:on-duty:reservist'] });
-          return component.toNode();
+          return new BuildTimeComponent(node, { classNameBindings: ['isActive:on-duty:reservist'] }).toElement();
         }
       }
     });
@@ -272,11 +255,10 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, {
+          return new BuildTimeComponent(node, {
             classNameBindings: ['isActive:on-duty:reservist'],
             isActive: true
-          });
-          return component.toNode();
+          }).toElement();
         }
       }
     });
@@ -286,11 +268,10 @@ describe('BuildTimeComponent', function() {
     modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, {
+          return new BuildTimeComponent(node, {
             classNameBindings: ['isActive:on-duty:reservist'],
             isActive: false
-          });
-          return component.toNode();
+          }).toElement();
         }
       }
     });
@@ -302,11 +283,10 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component extraClass="runtime"}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, {
+          return new BuildTimeComponent(node, {
             classNameBindings: ['extraClass'],
             extraClass: 'override'
-          });
-          return component.toNode();
+          }).toElement();
         }
       }
     });
@@ -323,7 +303,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component extraClass="runtime"}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toNode();
+          return new MyComponent(node).toElement();
         }
       }
     });
@@ -341,11 +321,10 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component isActive=true}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new SubComponent(node, {
+          return new SubComponent(node, {
             classNameBindings: ['isActive:on-duty:reservist'],
             isActive: true
-          });
-          return component.toNode();
+          }).toElement();
         }
       }
     });
@@ -361,10 +340,9 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new SubComponent(node, {
+          return new SubComponent(node, {
             classNameBindings: ['isActive:on-duty:reservist'],
-          });
-          return component.toNode();
+          }).toElement();;
         }
       }
     });
@@ -380,10 +358,9 @@ describe('BuildTimeComponent', function() {
     modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new AnotherSubComponent(node, {
+          return new AnotherSubComponent(node, {
             classNameBindings: ['isActive'],
-          });
-          return component.toNode();
+          }).toElement();
         }
       }
     });
@@ -405,11 +382,10 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component isActive=false}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new SubSubComponent(node, {
+          return new SubSubComponent(node, {
             classNameBindings: ['isActive:on-duty:reservist'],
             isActive: false
-          });
-          return component.toNode();
+          }).toElement();
         }
       }
     });
@@ -421,8 +397,10 @@ describe('BuildTimeComponent', function() {
   it('binds properties passed to the constructor', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        let component = new BuildTimeComponent(node, { title: 'sample title', attributeBindings: ['title'] });
-        return component.toNode();
+        return new BuildTimeComponent(node, {
+          title: 'sample title',
+          attributeBindings: ['title']
+        }).toElement();
       }
     });
 
@@ -435,7 +413,7 @@ describe('BuildTimeComponent', function() {
     }
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        return new MyComponent(node, { attributeBindings: ['title'] }).toNode();
+        return new MyComponent(node, { attributeBindings: ['title'] }).toElement();
       }
     });
 
@@ -448,7 +426,7 @@ describe('BuildTimeComponent', function() {
     }
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        return new MyComponent(node, { title: 'sample title' }).toNode();
+        return new MyComponent(node, { title: 'sample title' }).toElement();
       }
     });
 
@@ -470,7 +448,7 @@ describe('BuildTimeComponent', function() {
           ariaLabel: 'sample label',
           foo: 'bar',
           attributeBindings: ['foo']
-        }).toNode();
+        }).toElement();
       }
     });
 
@@ -480,8 +458,10 @@ describe('BuildTimeComponent', function() {
   it('binds properties passed to the constructor to the right attribute', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        let component = new BuildTimeComponent(node, { title: 'sample title', attributeBindings: ['title:aria-label'] });
-        return component.toNode();
+        return new BuildTimeComponent(node, {
+          title: 'sample title',
+          attributeBindings: ['title:aria-label']
+        }).toElement();
       }
     });
 
@@ -491,8 +471,10 @@ describe('BuildTimeComponent', function() {
   it('binds properties passed to the constructor using the truthy class', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        let component = new BuildTimeComponent(node, { title: 'sample title', attributeBindings: ['title:title:the-title'] });
-        return component.toNode();
+        return new BuildTimeComponent(node, {
+          title: 'sample title',
+          attributeBindings: ['title:title:the-title']
+        }).toElement();
       }
     });
 
@@ -502,8 +484,10 @@ describe('BuildTimeComponent', function() {
   it('binds properties passed on invocation over those passed in the controller', function() {
     let modifiedTemplate = processTemplate(`{{my-component title="real title"}}`, {
       MustacheStatement(node) {
-        let component = new BuildTimeComponent(node, { title: 'default title', attributeBindings: ['title'] });
-        return component.toNode();
+        return new BuildTimeComponent(node, {
+          title: 'default title',
+          attributeBindings: ['title']
+        }).toElement();
       }
     });
 
@@ -513,8 +497,10 @@ describe('BuildTimeComponent', function() {
   it('binds properties passed on invocation over those passed in the controller, to the specified attribute', function() {
     let modifiedTemplate = processTemplate(`{{my-component title="real title"}}`, {
       MustacheStatement(node) {
-        let component = new BuildTimeComponent(node, { title: 'default title', attributeBindings: ['title:aria-label'] });
-        return component.toNode();
+        return new BuildTimeComponent(node, {
+          title: 'default title',
+          attributeBindings: ['title:aria-label']
+        }).toElement();
       }
     });
 
@@ -524,8 +510,10 @@ describe('BuildTimeComponent', function() {
   it('binds properties passed on invocation over those passed in the controller using the truthy class', function() {
     let modifiedTemplate = processTemplate(`{{my-component isDisabled=true}}`, {
       MustacheStatement(node) {
-        let component = new BuildTimeComponent(node, { isDisabled: false, attributeBindings: ['isDisabled:disabled:nope'] });
-        return component.toNode();
+        return new BuildTimeComponent(node, {
+          isDisabled: false,
+          attributeBindings: ['isDisabled:disabled:nope']
+        }).toElement();
       }
     });
 
@@ -546,11 +534,10 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component isActive=false}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new SubSubComponent(node, {
+          return new SubSubComponent(node, {
             attributeBindings: ['isActive:is-active'],
             isActive: 'non'
-          });
-          return component.toNode();
+          }).toElement()
         }
       }
     });
@@ -560,11 +547,10 @@ describe('BuildTimeComponent', function() {
     modifiedTemplate = processTemplate(`{{my-component isActive=false}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new SubSubComponent(node, {
+          return new SubSubComponent(node, {
             attributeBindings: ['isActive:is-active:si'],
             isActive: 'non'
-          });
-          return component.toNode();
+          }).toElement()
         }
       }
     });
@@ -577,8 +563,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{#my-component title=boundValue}}<span>Inner content</span>{{/my-component}}`, {
       BlockStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node);
-          return component.toNode();
+          return new BuildTimeComponent(node).toElement();
         }
       }
     });
@@ -590,14 +575,13 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{#my-component}}<span>Inner content</span>{{/my-component}}<span>outside span</span>`, {
       BlockStatement(node) {
         if (node.path.original === 'my-component') {
-          let component = new BuildTimeComponent(node, {
+          return new BuildTimeComponent(node, {
             contentVisitor: {
               ElementNode(node: AST.ElementNode) {
                 return b.element('strong', [], [], node.children);
               }
             }
-          });
-          return component.toNode();
+          }).toElement();
         }
       }
     });
@@ -617,7 +601,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{#my-component}}<span>Inner content</span>{{/my-component}}<span>outside span</span>`, {
       BlockStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toNode();
+          return new MyComponent(node).toElement();
         }
       }
     });
@@ -637,7 +621,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}<span>outside span</span>`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toNode();
+          return new MyComponent(node).toElement();
         }
       }
     });
@@ -662,7 +646,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{#my-component classForChildren="foobar"}}<span>Inner content</span>{{/my-component}}<span>outside span</span>`, {
       BlockStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toNode();
+          return new MyComponent(node).toElement();
         }
       }
     });

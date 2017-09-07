@@ -267,7 +267,7 @@ export default class BuildTimeComponent {
     }
   }
 
-  toNode(): AST.ElementNode {
+  toElement(): AST.ElementNode {
     return b.element(this.tagName, this.nodeAttrs, this.nodeModifiers, this.nodeChildren);
   }
 
