@@ -468,17 +468,28 @@ describe('BuildTimeComponent', function() {
     expect(modifiedTemplate).toEqual(`<div aria-label="sample title"></div>`);
   });
 
-  it('binds properties passed to the constructor using the truthy class', function() {
+  it('binds properties passed to the constructor using the truthy and falsy class', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
         return new BuildTimeComponent(node, {
           title: 'sample title',
-          attributeBindings: ['title:title:the-title']
+          attributeBindings: ['title:title:has-title:no-title']
         }).toElement();
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div title="the-title"></div>`);
+    expect(modifiedTemplate).toEqual(`<div title="has-title"></div>`);
+
+    // modifiedTemplate = processTemplate(`{{my-component}}`, {
+    //   MustacheStatement(node) {
+    //     return new BuildTimeComponent(node, {
+    //       title: false,
+    //       attributeBindings: ['title:title:has-title:no-title']
+    //     }).toElement();
+    //   }
+    // });
+
+    // expect(modifiedTemplate).toEqual(`<div title="no-title"></div>`);
   });
 
   it('binds properties passed on invocation over those passed in the controller', function() {

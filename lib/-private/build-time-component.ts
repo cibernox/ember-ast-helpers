@@ -28,9 +28,6 @@ function buildConditional(cond: AST.PathExpression | AST.SubExpression, truthyVa
 export type BuildTimeComponentOptions = {
   tagName: string
   classNames: string[]
-  ariaHidden: boolean
-  title: string | undefined | null
-  ariaLabel: string | undefined | null
   classNameBindings: string[]
   attributeBindings: string[]
   contentVisitor?: NodeVisitor
@@ -157,17 +154,24 @@ export default class BuildTimeComponent {
   // Element getters
 
   /**
-   * There is two kind of attributeBindings, boolean or regular.
+   * Attribute bindings have this format: `<propName>:<attrName>:<truthyValue>`.
+   *
+   * These bindings can be of two types, boolean or regular.
    *
    * Boolean:
-   * - `attributeBinding: ['active:on-duty:reservist']`
-   *   when true => `<div active="on-duty">`
-   *   when false => `<div active="reservist">`
-   *   when dynamic => `<div active={{if active 'on-duty' 'reservist'}}>`
-   * - `attributeBinding: ['active:on-duty']`
-   *   when true => `<div active="on-duty">`
+   * - `attributeBinding: ['active:aria-active:on:off']`
+   *   when true => `<div aria-active="on">`
+   *   when false => `<div aria-active="off">`
+   *   when dynamic => `<div aria-active={{if active 'on' 'off'}}>`
+   * - `attributeBinding: ['active:aria-active:on']`
+   *   when true => `<div aria-active="on">`
    *   when false => `<div>`
-   *   when dynamic => `<div active={{if active 'on-duty'}}>`
+   *   when dynamic => `<div aria-active={{if active 'on'}}>`
+   * - `attributeBinding: ['active:aria-active']` but we can determine statically that `active` is
+   *   expected to be a boolean
+   *   when true => `<div aria-active="true">`
+   *   when false => `<div>`
+   *   when dynamic => `<div aria-active={{if active 'true'}}>`
    * - `attributeBinding: ['active']` but we can determine statically that `active` is expected
    *   to be a boolean:
    *   when true => `<div active="true">`
@@ -182,6 +186,9 @@ export default class BuildTimeComponent {
   get elementAttrs(): AST.AttrNode[] {
     let attrs: AST.AttrNode[] = [];
     this.attributeBindings.forEach((binding) => {
+      // let [propName, attrName, valueWhenTrue, valueWhenFalse] = binding.split(':');
+      // let isBooleanBinding = attrName !== undefined;
+
       let [propName, attrName, valueWhenTrue] = binding.split(':');
       attrName = attrName || propName;
       let attrContent;
