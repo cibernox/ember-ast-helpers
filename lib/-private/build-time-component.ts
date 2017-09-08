@@ -36,17 +36,6 @@ export type BuildTimeComponentOptions = {
 
 export type BuildTimeComponentNode = AST.MustacheStatement | AST.BlockStatement
 
-const defaultOptions : BuildTimeComponentOptions = {
-  tagName: 'div',
-  classNames: [],
-  ariaHidden: false,
-  title: undefined,
-  ariaLabel: undefined,
-  classNameBindings: [],
-  attributeBindings: ['class'],
-  nodeVisitor: undefined
-}
-
 /**
  * This is supposed to be the main abstraction used by most people to achieve most of their works
  * Only when they want to do something extra the can override methods and do it themselves.
@@ -82,10 +71,13 @@ const defaultOptions : BuildTimeComponentOptions = {
 
 export default class BuildTimeComponent {
   node: BuildTimeComponentNode
-  defaults = Object.assign({}, defaultOptions)
+  _defaultTagName: string = 'div'
+  _defaultClassNames: string[] = []
+  _defaultClassNameBindings: string[] = []
+  _defaultAttributeBindings: string[] = ['class']
+  _contentVisitor?: NodeVisitor
   options: Partial<BuildTimeComponentOptions>
   attrs: { [key: string]: AST.Literal | AST.PathExpression | AST.SubExpression }
-  _contentVisitor?: NodeVisitor
   [key: string]: any
 
   constructor(node: BuildTimeComponentNode, options: Partial<BuildTimeComponentOptions> = {}) {
@@ -99,7 +91,7 @@ export default class BuildTimeComponent {
   get tagName(): string {
     let tagName = this.attrs.tagName;
     if (tagName === undefined) {
-      return this.options.tagName || this.defaults.tagName;
+      return this.options.tagName || this._defaultTagName;
     } else if (tagName.type === 'StringLiteral') {
       return tagName.value;
     } else {
@@ -107,28 +99,28 @@ export default class BuildTimeComponent {
     }
   }
   set tagName(str: string) {
-    this.defaults.tagName = str
+    this._defaultTagName = str
   }
 
   get attributeBindings() {
-    return this.defaults.attributeBindings.concat(this.options.attributeBindings || [])
+    return this._defaultAttributeBindings.concat(this.options.attributeBindings || [])
   }
   set attributeBindings(attributeBindings: string[]) {
-    this.defaults.attributeBindings = this.defaults.attributeBindings.concat(attributeBindings);
+    this._defaultAttributeBindings = this._defaultAttributeBindings.concat(attributeBindings);
   }
 
   get classNames() {
-    return this.defaults.classNames.concat(this.options.classNames || [])
+    return this._defaultClassNames.concat(this.options.classNames || [])
   }
   set classNames(classNames: string[]) {
-    this.defaults.classNames = this.defaults.classNames.concat(classNames);
+    this._defaultClassNames = this._defaultClassNames.concat(classNames);
   }
 
   get classNameBindings() {
-    return this.defaults.classNameBindings.concat(this.options.classNameBindings || [])
+    return this._defaultClassNameBindings.concat(this.options.classNameBindings || [])
   }
   set classNameBindings(classNameBindings: string[]) {
-    this.defaults.classNameBindings = this.defaults.classNameBindings.concat(classNameBindings);
+    this._defaultClassNameBindings = this._defaultClassNameBindings.concat(classNameBindings);
   }
 
   // Internal methods
@@ -323,10 +315,7 @@ export default class BuildTimeComponent {
     if (this[`${propName}Content`]) {
       computedValue = this[`${propName}Content`]();
     } else {
-      staticValue = this.options[propName] !== undefined ? this.options[propName] : this.defaults[propName];
-      if (staticValue === undefined) {
-        staticValue = this[propName];
-      }
+      staticValue = this.options[propName] !== undefined ? this.options[propName] : this[propName];
     }
     if (!isBooleanBinding) {
       if (computedValue !== undefined) {
