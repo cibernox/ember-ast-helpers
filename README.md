@@ -66,7 +66,7 @@ In the future once Class properties are implemented (Stage 3 right now) you will
 code above:
 
 ```js
-// IMPORTANT, THE CODE ABOVE DOES NOT WORK UNLESS YOU TRANSPILE IT
+// IMPORTANT, THE CODE BELOW DOES NOT WORK UNLESS YOU TRANSPILE IT
 class MyComponent extends BuildTimeComponent {
   tagName = 'span'
   classNames = ['my-component']
