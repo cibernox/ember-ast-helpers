@@ -3,8 +3,108 @@
 This library is an utility belt to make AST transforms and shield users as much as possible from
 the nuances of the AST, as it still private API.
 
-#### Helpers
+
+
+## Helpers
+
+### `BuildTimeComponent`
+
+This class is the main interface users should use. It gives you a nice declarative way of defining
+complex transforms from curly components to HTMLElements that resembles `Ember.Component` in its
+API.
+
+The basic usage is simple:
+```js
+let component = new BuildTimeComponent(node);
+component.toNode()
+```
+
+This alone mimic the behaviour of `Ember.Component` in some ways:
+- Generates a `div` element
+- Binds the `class=` attribute received on invocation to the class on the element.
+
+It also accepts an object with options to configure it, much like `Ember.Component.extend(opts)`:
+
+```js
+let component = new BuildTimeComponent(node, {
+  tagName: 'span',
+  classNames: ['my-component'],
+  classNameBindings: ['isActive:is-active:is-disabled'],
+  attributeBindings: ['title', 'ariaLabel:aria-label'],
+  active: true
+});
+component.toNode()
+```
+
+This will be smart enough to generate the appropriate transformations:
+
+| Original                                       | Transformed                          |
+|------------------------------------------------|--------------------------------------|
+| `{{my-component class="simple-example"}}`      | `<span class="my-component is-active simple-example"></span>` |
+| `{{my-component class="simple-example" isActive=false}}`      | `<span class="my-component simple-example"></span>` |
+| `{{my-component class="simple-example" isActive=isActive}}`   | `<span class="my-component {{if isActive 'is-active' 'is-disabled'}} simple-example"></span>` |
+| `{{my-component class="simple-example" title="Hello" ariaLabel="World"}}`   | `<span class="my-component is-active simple-example" title="Hello" aria-label="World"></span>` |
+| `{{my-component class="simple-example" title=title}}`   | `<span class="my-component is-active simple-example" title={{title}}></span>` |
+
+Just as you'd expect from `Ember.Component`, you can subclass `BuildTimeComponent` to configure it
+once and reuse it many times, all in a nice ES6 syntax. And `classNames`, `classNameBindings` and
+`attributeBindings` work as concatenated properties.
+
+```js
+class MyComponent extends BuildTimeComponent {
+  constructor(node, { tagName = 'span', isActive = true, ...rest }) {
+    super(node, { tagName, isActive, ...rest });
+    this.classNames = ['my-component'];
+    this.classNameBindings = ['isActive:is-active:is-disabled'];
+    this.attributeBindings = ['title', 'ariaLabel:aria-label'];
+  }
+}
+```
+
+In the future once Class properties are implemented (Stage 3 right now) you will be able to DRY up the
+code above:
+
+```js
+// IMPORTANT, THE CODE ABOVE DOES NOT WORK UNLESS YOU TRANSPILE IT
+class MyComponent extends BuildTimeComponent {
+  tagName = 'span'
+  classNames = ['my-component']
+  classNameBindings = ['isActive:is-active:is-disabled']
+  attributeBindings = ['title', 'ariaLabel:aria-label']
+  isActive = true
+}
+```
+
+What about classes/attributes that cannot be expressed with simple bindings?
+For that, you can declare functions named `<propName>Content` and that function
+will win over runtime options, extension options or invocation options.
+
+To clarify that, you need to understand that there is 4 ways components can get their title:
+```js
+class Foo extends BuildTimeComponent {
+  super(node, opts) {
+    super(node, opts);
+    this.title = 'Extension time title';
+  },
+
+  titleContent() {
+    return "Computed title";
+  }
+}
+let component = new Foo(node, { title: 'Initialization-time title' });
+```
+```hbs
+  {{my-foo title="Runtime title"}}
+```
+
+The precedence rules are:
+
+1) `<propName>Content(){ }` wins over everything
+2) In its absence, the runtime argument (`{{my-foo propName="value"}}`) wins.
+3) In the absence of both, the options passed when the component is instantiated (`new Foo(node, { propName: 'value' })`) wins.
+4) Lastly if none is provided, the default value when the class is defined is applied.
+
+### Other helpers
 
 - `buildAttr(builder, attributeName, content) => AttrNode`:  Content can be pretty much anything. JS Strings, `StringLiteral`s, `TextNode`s, `PathExpression`, `ConcatStatement`s ... Just pass things down, it will do the right thing.
-- `appendToContent(builder, content, dataToAppend, options) => newContent`: It takes cares of the nuances of joining content together. It can be used by example to construct the content of an attribute
-like `class` from several pieces. It accepts pretty much anything. By default it adds a space between values, but that can be changed passing `prependSpace: false` on the options.
+- `appendToContent(builder, content, dataToAppend, options) => newContent`: It takes cares of the nuances of joining content together. It can be used by example to construct the content of an attribute like `class` from several pieces. It accepts pretty much anything. By default it adds a space between values, but that can be changed passing `prependSpace: false` on the options.
