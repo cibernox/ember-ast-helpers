@@ -66,7 +66,10 @@ function appendSubExpressionToContent(sexpr: AST.SubExpression, content: AttrVal
   return appendMustacheToContent(b.mustache(sexpr.path, sexpr.params, sexpr.hash), content, opts);
 }
 
-export default function appendToContent(val: AttrValueAppendable, content: AttrValue = b.text(''), opts = { prependSpace: true }): AttrValue {
+export default function appendToContent(val: AttrValueAppendable | null | undefined, content: AttrValue = b.text(''), opts = { prependSpace: true }): AttrValue {
+  if (val === undefined || val === null) {
+    return content;
+  }
   if (typeof val === 'string' || typeof val === 'number') {
     return appendLiteralToContent(String(val), content, opts);
   }

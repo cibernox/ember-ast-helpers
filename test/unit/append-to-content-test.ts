@@ -5,6 +5,30 @@ import processTemplate from '../helpers/process-template';
 import { appendToContent } from '../../lib';
 
 describe('Helper #appendToContent', function() {
+  it('it can append undefined (which does nothing)', function() {
+    let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
+      AttrNode(attr) {
+        attr.value = appendToContent(undefined, attr.value);
+        attr.value = appendToContent(undefined, attr.value);
+        return attr;
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div class="foo"></div>`);
+  });
+
+  it('it can append null (which does nothing)', function() {
+    let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
+      AttrNode(attr) {
+        attr.value = appendToContent(null, attr.value);
+        attr.value = appendToContent(null, attr.value);
+        return attr;
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div class="foo"></div>`);
+  });
+
   it('it can append regular strings', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode(attr) {
