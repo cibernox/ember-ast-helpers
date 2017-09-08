@@ -41,6 +41,7 @@ This will be smart enough to generate the appropriate transformations:
 | Original                                       | Transformed                          |
 |------------------------------------------------|--------------------------------------|
 | `{{my-component class="simple-example"}}`      | `<span class="my-component is-active simple-example"></span>` |
+| `{{my-component class=someClass}}`      | `<span class="my-component {{someClass}}"></span>` |
 | `{{my-component class="simple-example" isActive=false}}`      | `<span class="my-component simple-example"></span>` |
 | `{{my-component class="simple-example" isActive=isActive}}`   | `<span class="my-component {{if isActive 'is-active' 'is-disabled'}} simple-example"></span>` |
 | `{{my-component class="simple-example" title="Hello" ariaLabel="World"}}`   | `<span class="my-component is-active simple-example" title="Hello" aria-label="World"></span>` |
