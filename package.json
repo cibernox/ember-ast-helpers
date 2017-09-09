@@ -16,7 +16,7 @@
   },
   "license": "MIT",
   "author": "Miguel Camba <miguel.camba@gmail.com>",
-  "main": "dist/lib/index.js",
+  "main": "dist/lib",
   "types": "dist/lib/index.d.ts",
   "repository": {
     "type": "git",

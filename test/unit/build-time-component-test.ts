@@ -1,7 +1,7 @@
 'use strict';
 
 import processTemplate from '../helpers/process-template';
-import { BuildTimeComponent, BuildTimeComponentNode, BuildTimeComponentOptions } from '../../lib';
+import BuildTimeComponent, { BuildTimeComponentNode, BuildTimeComponentOptions } from '../../lib/build-time-component';
 import { builders as b, AST } from '@glimmer/syntax';
 
 describe('BuildTimeComponent', function() {
@@ -175,7 +175,7 @@ describe('BuildTimeComponent', function() {
     expect(modifiedTemplate).toEqual(`<div class={{isActive}}></div>`);
   });
 
-  it('transform paths to class names using the truty class', function() {
+  it('transform paths to class names using the truthy class', function() {
     let modifiedTemplate = processTemplate(`{{my-component isActive=isActive}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
