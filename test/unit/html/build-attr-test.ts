@@ -82,7 +82,7 @@ describe('Helper #appendToContent', function() {
   });
 
   it('it builds attrs given a SubExpression', function() {
-    let modifiedTemplate = processTemplate(`{{some-helper title=(concat 'a' 'b')}}`, {
+    let modifiedTemplate = processTemplate(`{{some-helper title=(concat 'a' 'b' foo=bar)}}`, {
       MustacheStatement(node) {
         let title = node.hash.pairs.filter((p) => p.key === 'title')[0];
         if (title !== undefined) {
@@ -96,7 +96,7 @@ describe('Helper #appendToContent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div not-class={{concat "a" "b"}}></div>`);
+    expect(modifiedTemplate).toEqual(`<div not-class={{concat "a" "b" foo=bar}}></div>`);
   });
 
   it('it builds attrs given a ConcatStatement without superfluous quotes', function() {

@@ -13,7 +13,7 @@ export function buildAttr(name: string, content: BuildAttrContent): AST.AttrNode
   } else if (content.type === 'PathExpression') {
     return b.attr(name, b.mustache(content));
   } else if (content.type === 'SubExpression') {
-    return b.attr(name, b.mustache(content.path, content.params));
+    return b.attr(name, b.mustache(content.path, content.params, content.hash));
   } else if (content.type === 'StringLiteral') {
     return b.attr(name, b.text(content.value));
   } else if (content.type === 'BooleanLiteral') {
