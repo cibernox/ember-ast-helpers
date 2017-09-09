@@ -1,4 +1,4 @@
-npm run prepublish &&
+npm run prepare &&
 cp -rf package.json dist/lib &&
 cd dist/lib &&
 npm publish &&
