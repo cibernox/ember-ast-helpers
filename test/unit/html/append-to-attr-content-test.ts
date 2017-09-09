@@ -1,8 +1,8 @@
 'use strict';
 
 import { builders as b } from '@glimmer/syntax';
-import processTemplate from '../helpers/process-template';
-import { appendToAttrContent } from '../../lib/html';
+import processTemplate from '../../helpers/process-template';
+import { appendToAttrContent } from '../../../lib/html';
 
 describe('Helper #appendToAttrContent', function() {
   it('it can append undefined (which does nothing)', function() {

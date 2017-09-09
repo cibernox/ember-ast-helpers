@@ -134,3 +134,12 @@ function appendPathToContent(pathExp: AST.PathExpression, content: AST.AttrNode[
 function appendSubExpressionToContent(sexpr: AST.SubExpression, content: AST.AttrNode['value'], opts: AppendOptions): AST.AttrNode['value'] {
   return appendMustacheToContent(b.mustache(sexpr.path, sexpr.params, sexpr.hash), content, opts);
 }
+
+// buildAttrContent
+export function buildAttrContent(parts: AppendableToAttrContent[]): BuildAttrContent {
+  let content: BuildAttrContent = undefined;
+  for(let i = 0; i < parts.length; i++) {
+    content = appendToAttrContent(parts[i], content, { prependSpace: false });
+  }
+  return content;
+}

@@ -23,6 +23,7 @@ function buildConditional(cond: AST.PathExpression | AST.SubExpression, truthyVa
   return b.mustache(b.path('if'), mustacheArgs);
 }
 
+export { default as interpolateProperties } from './build-time-component/interpolate-properties';
 export type BuildTimeComponentOptions = {
   tagName: string
   classNames: string[]
