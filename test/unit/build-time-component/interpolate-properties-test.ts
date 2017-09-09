@@ -118,4 +118,21 @@ describe('Helper #interpolateProperties', function() {
 
     expect(modifiedTemplate).toEqual('<div aria-label="Hello, my name is Jane Doe"></div>');
   });
+
+  it('does uses interpolate the `<propName>Content` function if this very function IS the `<propName>Content`', function() {
+    class MyComponent extends BuildTimeComponent {
+      attributeBindings = ['salute:aria-label']
+      saluteContent = interpolateProperties('i :salute: you')
+    }
+
+    let modifiedTemplate = processTemplate(`{{my-component salute="greet"}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node, { firstName: 'John', lastName: 'Smith' }).toElement();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual('<div aria-label="i greet you"></div>');
+  });
 });

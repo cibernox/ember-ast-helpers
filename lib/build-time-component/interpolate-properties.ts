@@ -26,14 +26,14 @@ type ConcatPart = AST.MustacheStatement | AST.TextNode;
 
 export default function interpolateProperties(interpolation: string, divisor = ':') {
   let parts = splitInterpolation(interpolation, divisor);
-  return function(this: BuildTimeComponent) {
+  return function _interpolate(this: BuildTimeComponent) {
     let concatParts: AppendableToAttrContent[] = [];
     let hasDynamicInterpolation = false;
     for (let part of parts) {
       if (part[0] === divisor && part[part.length - 1] === divisor) {
         let propName = part.slice(1, part.length - 1);
         let attrValue = this.attrs[propName];
-        if (this[`${propName}Content`]) {
+        if (this[`${propName}Content`] && this[`${propName}Content`] !== _interpolate) {
           concatParts.push(this[`${propName}Content`]());
         } else if (attrValue) {
           concatParts.push(attrValue);
