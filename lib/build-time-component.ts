@@ -1,12 +1,10 @@
-import appendToContent from './append-to-content';
-import buildAttr, { AttrValue } from './build-attr';
+import { appendToAttrContent, buildAttr, BuildAttrContent } from './html';
 import {
   builders as b,
   traverse,
   AST,
   NodeVisitor
 } from '@glimmer/syntax';
-// import { uniq } from 'lodash';
 
 function dashify(str: string): string {
   str = str.replace(/([a-z])([A-Z])/g, '$1-$2');
@@ -131,14 +129,14 @@ export default class BuildTimeComponent {
     this._contentVisitor = visitor;
   }
 
-  classContent(): AttrValue | undefined {
-    let content: AttrValue | undefined;
+  classContent(): BuildAttrContent | undefined {
+    let content: AST.AttrNode['value'] | undefined;
     if (this.classNames.length > 0) {
-      content = appendToContent(this.classNames.join(' '), content)
+      content = appendToAttrContent(this.classNames.join(' '))
     }
     content = this._applyClassNameBindings(content);
     if (this.attrs.class !== undefined) {
-      content = appendToContent(this.attrs.class, content);
+      content = appendToAttrContent(this.attrs.class, content);
     }
     return content;
   }
@@ -268,7 +266,7 @@ export default class BuildTimeComponent {
    * determine the value in compile time, it will generate `<div class="a b c propValue"></div>`,
    * and if it can't, it will be interpolated `<div class="a b c {{prop}}"></div>`
    */
-  _applyClassNameBindings(content: AttrValue | undefined): AttrValue | undefined {
+  _applyClassNameBindings(content: AST.AttrNode['value'] | undefined): AST.AttrNode['value'] | undefined {
     this.classNameBindings.forEach((binding) => {
       let {
         isBooleanBinding,
@@ -285,22 +283,22 @@ export default class BuildTimeComponent {
         if (computedValue !== undefined) {
           let part = computedValue ? truthyValue : falsyValue;
           if (part) {
-            content = appendToContent(part, content);
+            content = appendToAttrContent(part, content);
           }
         } else if (attrValue !== undefined) {
           if (AST.isLiteral(attrValue)) {
             let part = attrValue.value ? truthyValue : falsyValue;
             if (part) {
-              content = appendToContent(part, content);
+              content = appendToAttrContent(part, content);
             }
           } else {
-            content = appendToContent(buildConditional(attrValue, truthyValue, falsyValue), content)
+            content = appendToAttrContent(buildConditional(attrValue, truthyValue, falsyValue), content)
           }
         } else {
-          content = appendToContent(staticValue ? truthyValue : falsyValue, content);
+          content = appendToAttrContent(staticValue ? truthyValue : falsyValue, content);
         }
       } else {
-        content = appendToContent(computedValue || attrValue || staticValue, content);
+        content = appendToAttrContent(computedValue || attrValue || staticValue, content);
       }
     });
     return content;
