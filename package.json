@@ -1,6 +1,6 @@
 {
   "name": "ember-ast-helpers",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Utility belt to level-up your Ember AST transforms",
   "keywords": [
     "ember",
@@ -16,14 +16,13 @@
   },
   "license": "MIT",
   "author": "Miguel Camba <miguel.camba@gmail.com>",
-  "main": "dist/lib",
-  "types": "dist/lib/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/cibernox/ember-ast-helpers.git"
   },
   "scripts": {
     "prepublish": "npm run build",
+    "prepublishOnly": "cp package.json dist && cd dist",
     "build": "tsc",
     "test": "tsc && jest",
     "test:coverage": "jest --coverage",
