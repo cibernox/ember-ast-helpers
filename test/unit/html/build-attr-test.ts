@@ -1,8 +1,8 @@
 'use strict';
 
 import { builders as b, AST } from '@glimmer/syntax';
-import processTemplate from '../helpers/process-template';
-import { buildAttr } from '../../lib/html';
+import processTemplate from '../../helpers/process-template';
+import { buildAttr } from '../../../lib/html';
 
 describe('Helper #appendToContent', function() {
   it('it builds attrs given a string', function() {
