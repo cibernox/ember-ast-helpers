@@ -1,6 +1,6 @@
 {
   "name": "ember-ast-helpers",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Utility belt to level-up your Ember AST transforms",
   "keywords": [
     "ember",
@@ -22,7 +22,6 @@
   },
   "scripts": {
     "prepublish": "npm run build",
-    "prepublishOnly": "cp package.json dist && cd dist",
     "build": "tsc",
     "test": "tsc && jest",
     "test:coverage": "jest --coverage",
