@@ -21,7 +21,7 @@
     "url": "git+ssh://git@github.com/cibernox/ember-ast-helpers.git"
   },
   "scripts": {
-    "prepublish": "npm run build",
+    "prepare": "npm run build",
     "build": "tsc",
     "test": "tsc && jest",
     "test:coverage": "jest --coverage",
