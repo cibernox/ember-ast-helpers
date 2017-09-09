@@ -5,9 +5,6 @@ import processTemplate from '../../helpers/process-template';
 import BuildTimeComponent, { interpolateProperties } from '../../../lib/build-time-component';
 
 describe('Helper #interpolateProperties', function() {
-  it('interpolates properties set on the component');
-  it('interpolates properties passed on the options');
-
   it('interpolates literals passed on the template', function() {
     class MyComponent extends BuildTimeComponent {
       attributeBindings = ['salute:aria-label']
@@ -42,113 +39,83 @@ describe('Helper #interpolateProperties', function() {
     expect(modifiedTemplate).toEqual('<div aria-label="Hello, my name is Robert {{lastName}}"></div>');
   });
 
-  it('interpolates subexpressions passed on the template');
+  it('interpolates subexpressions passed on the template', function() {
+    class MyComponent extends BuildTimeComponent {
+      attributeBindings = ['salute:aria-label']
+      saluteContent = interpolateProperties('Hello, my name is :firstName: :lastName:');
+    }
 
-  // it('it builds attrs given a string', function() {
-  //   let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
-  //     AttrNode() {
-  //       return buildAttr('not-class', 'new content');
-  //     }
-  //   });
+    let modifiedTemplate = processTemplate(`{{my-component firstName=firstName lastName=(if anonymous 'Doe' 'Jackson')}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node).toElement();
+        }
+      }
+    });
 
-  //   expect(modifiedTemplate).toEqual(`<div not-class="new content"></div>`);
-  // });
+    expect(modifiedTemplate).toEqual('<div aria-label="Hello, my name is {{firstName}} {{if anonymous "Doe" "Jackson"}}"></div>');
+  });
 
-  // it('it builds attrs given a TextNode', function() {
-  //   let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
-  //     AttrNode() {
-  //       return buildAttr('not-class', b.text('new content'));
-  //     }
-  //   });
+  it('interpolates primitive values set on the component itself', function() {
+    class MyComponent extends BuildTimeComponent {
+      attributeBindings = ['salute:aria-label']
+      firstName = 'Robert'
+      lastName = 'Jackson'
+      saluteContent = interpolateProperties('Hello, my name is :firstName: :lastName:');
+    }
 
-  //   expect(modifiedTemplate).toEqual(`<div not-class="new content"></div>`);
-  // });
+    let modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node).toElement();
+        }
+      }
+    });
 
-  // it('it builds attrs given a StringLiteral', function() {
-  //   let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
-  //     AttrNode() {
-  //       return buildAttr('not-class', b.string('new content'));
-  //     }
-  //   });
+    expect(modifiedTemplate).toEqual('<div aria-label="Hello, my name is Robert Jackson"></div>');
+  });
 
-  //   expect(modifiedTemplate).toEqual(`<div not-class="new content"></div>`);
-  // });
+  it('interpolates primitive values passed when the component was instantiated (other those set on the component itself)', function() {
+    class MyComponent extends BuildTimeComponent {
+      attributeBindings = ['salute:aria-label']
+      firstName = 'Robert'
+      lastName = 'Jackson'
+      saluteContent = interpolateProperties('Hello, my name is :firstName: :lastName:');
+    }
 
-  // it('it builds attrs given a BooleanLiteral', function() {
-  //   let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
-  //     AttrNode() {
-  //       return buildAttr('not-class', b.boolean(true));
-  //     }
-  //   });
+    let modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node, { firstName: 'Jane', lastName: 'Doe' }).toElement();
+        }
+      }
+    });
 
-  //   expect(modifiedTemplate).toEqual(`<div not-class=""></div>`);
+    expect(modifiedTemplate).toEqual('<div aria-label="Hello, my name is Jane Doe"></div>');
+  });
 
-  //   modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
-  //     AttrNode() {
-  //       return buildAttr('not-class', b.boolean(false));
-  //     }
-  //   });
+  it('interpolates the value returned from `<propName>Content` instead of those passed on the template or initialization', function() {
+    class MyComponent extends BuildTimeComponent {
+      attributeBindings = ['salute:aria-label']
+      firstName = 'Robert'
+      lastName = 'Jackson'
+      saluteContent = interpolateProperties('Hello, my name is :firstName: :lastName:')
+      firstNameContent() {
+        return 'Jane';
+      }
+      lastNameContent() {
+        return 'Doe';
+      }
+    }
 
-  //   expect(modifiedTemplate).toEqual(`<div></div>`);
-  // });
+    let modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node, { firstName: 'John', lastName: 'Smith' }).toElement();
+        }
+      }
+    });
 
-  // it('it builds attrs given a NumberLiteral', function() {
-  //   let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
-  //     AttrNode() {
-  //       return buildAttr('not-class', b.number(2));
-  //     }
-  //   });
-
-  //   expect(modifiedTemplate).toEqual(`<div not-class="2"></div>`);
-
-  //   modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
-  //     AttrNode() {
-  //       return buildAttr('not-class', b.boolean(false));
-  //     }
-  //   });
-
-  //   expect(modifiedTemplate).toEqual(`<div></div>`);
-  // });
-
-  // it('it builds attrs given a PathExpression', function() {
-  //   let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
-  //     AttrNode() {
-  //       return buildAttr('not-class', b.path('boundValue'));
-  //     }
-  //   });
-
-  //   expect(modifiedTemplate).toEqual(`<div not-class={{boundValue}}></div>`);
-  // });
-
-  // it('it builds attrs given a SubExpression', function() {
-  //   let modifiedTemplate = processTemplate(`{{some-helper title=(concat 'a' 'b')}}`, {
-  //     MustacheStatement(node) {
-  //       let title = node.hash.pairs.filter((p) => p.key === 'title')[0];
-  //       if (title !== undefined) {
-  //         let attrs = [];
-  //         let attr = buildAttr('not-class', title.value);
-  //         if (attr) {
-  //           attrs.push(attr)
-  //         }
-  //         return b.element('div', attrs);
-  //       }
-  //     }
-  //   });
-
-  //   expect(modifiedTemplate).toEqual(`<div not-class={{concat "a" "b"}}></div>`);
-  // });
-
-  // it('it builds attrs given a ConcatStatement without superfluous quotes', function() {
-  //   let modifiedTemplate = processTemplate(`{{some-helper}}`, {
-  //     MustacheStatement(node) {
-  //       if (node.path.original === 'some-helper') {
-  //         let condition = b.mustache(b.path('if'), [b.path('cond'), b.string('yes'), b.string('no')]);
-  //         let attr = <AST.AttrNode> buildAttr('not-class', b.concat([condition]));;
-  //         return b.element('div', [attr]);
-  //       }
-  //     }
-  //   });
-
-  //   expect(modifiedTemplate).toEqual(`<div not-class={{if cond "yes" "no"}}></div>`);
-  // });
+    expect(modifiedTemplate).toEqual('<div aria-label="Hello, my name is Jane Doe"></div>');
+  });
 });
