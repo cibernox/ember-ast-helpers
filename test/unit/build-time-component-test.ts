@@ -64,6 +64,38 @@ describe('BuildTimeComponent', function() {
     expect(modifiedTemplate).toEqual(`<span></span>`);
   });
 
+  // id
+  it('binds the id attribute', function() {
+    let modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        return new BuildTimeComponent(node, { id: 'default-id' }).toElement();
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div id="default-id"></div>`);
+
+    modifiedTemplate = processTemplate(`{{my-component id="runtime-id"}}`, {
+      MustacheStatement(node) {
+        return new BuildTimeComponent(node, { id: 'default-id' }).toElement();
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div id="runtime-id"></div>`);
+
+    class MyComponent extends BuildTimeComponent {
+      idContent() {
+        return 'computed-id';
+      }
+    }
+    modifiedTemplate = processTemplate(`{{my-component id="runtime-id"}}`, {
+      MustacheStatement(node) {
+        return new MyComponent(node, { id: 'default-id' }).toElement();
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div id="computed-id"></div>`);
+  });
+
   // class
   it('honors the default classNames passed to the constructor', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {

@@ -73,7 +73,7 @@ export default class BuildTimeComponent {
   _defaultTagName: string = 'div'
   _defaultClassNames: string[] = []
   _defaultClassNameBindings: string[] = []
-  _defaultAttributeBindings: string[] = ['class']
+  _defaultAttributeBindings: string[] = ['id', 'class']
   _contentVisitor?: NodeVisitor
   options: Partial<BuildTimeComponentOptions>
   attrs: { [key: string]: AST.Literal | AST.PathExpression | AST.SubExpression }
