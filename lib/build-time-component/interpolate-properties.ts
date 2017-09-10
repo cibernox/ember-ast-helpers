@@ -23,16 +23,23 @@ function splitInterpolation(interpolation: string, divisor: string): string[] {
 }
 
 type ConcatPart = AST.MustacheStatement | AST.TextNode;
+export type interpolatePropertiesOptions = {
+  divisor?: string
+  skipIfMissing?: boolean
+  callback?: (interpolations: { [key: string]: any }) => void
+}
 
-export default function interpolateProperties(interpolation: string, { divisor = ':', skipIfMissing = true } = {}) {
+export default function interpolateProperties(interpolation: string, { divisor = ':', skipIfMissing = true, callback }: interpolatePropertiesOptions = {}) {
   let parts = splitInterpolation(interpolation, divisor);
   return function _interpolate(this: BuildTimeComponent) {
     let concatParts: AppendableToAttrContent[] = [];
     let hasDynamicInterpolation = false;
     let missingInterpolationValues = false;
+    let interpolations: { [key: string]: any } = {};
     for (let part of parts) {
+      let propName;
       if (part[0] === divisor && part[part.length - 1] === divisor) {
-        let propName = part.slice(1, part.length - 1);
+        propName = part.slice(1, part.length - 1);
         let attrValue = this.invocationAttrs[propName];
         let value;
         if (this[`${propName}Content`] && this[`${propName}Content`] !== _interpolate) {
@@ -47,6 +54,7 @@ export default function interpolateProperties(interpolation: string, { divisor =
         if (skipIfMissing && value === null || value === undefined || value.type === 'UndefinedLiteral' || value.type === 'NullLiteral') {
           missingInterpolationValues = true;
         } else {
+          interpolations[propName] = value;
           concatParts.push(value);
         }
       } else {
@@ -54,6 +62,9 @@ export default function interpolateProperties(interpolation: string, { divisor =
       }
     }
     if (!missingInterpolationValues || !skipIfMissing) {
+      if (callback !== undefined) {
+        callback.apply(this, [interpolations]);
+      }
       return buildAttrContent(concatParts);
     }
   }

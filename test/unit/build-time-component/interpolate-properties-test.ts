@@ -248,4 +248,31 @@ describe('Helper #interpolateProperties', function() {
 
     expect(modifiedTemplate).toEqual('<div aria-label="Hello, my name is  "></div>');
   });
+
+  it('if the user passes a callback on the options, it will be invoked with an object containing the interpolations', function() {
+    let run = false;
+    function callback(this: BuildTimeComponent, interpolations: { [key: string]: any }) {
+      expect(this.options).toEqual({ foo: 'bar' });
+      expect(interpolations.firstName.value).toEqual('Robert');
+      expect(interpolations.lastName.type).toEqual('PathExpression');
+      expect(interpolations.lastName.original).toEqual('lastName');
+      run = true;
+    }
+    class MyComponent extends BuildTimeComponent {
+      attributeBindings = ['salute:aria-label']
+      saluteContent = interpolateProperties('Hello, my name is :firstName: :lastName:', { callback });
+    }
+
+    let modifiedTemplate = processTemplate(`{{my-component firstName="Robert" lastName=lastName}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node, { foo: 'bar' }).toElement();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual('<div aria-label="Hello, my name is Robert {{lastName}}"></div>');
+    expect(run).toBe(true)
+  });
+
 });
