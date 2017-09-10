@@ -135,4 +135,117 @@ describe('Helper #interpolateProperties', function() {
 
     expect(modifiedTemplate).toEqual('<div aria-label="i greet you"></div>');
   });
+
+  it('if we can determine that all interpolation values are null/false/undefined, it returns nothing', function() {
+    class MyComponent extends BuildTimeComponent {
+      attributeBindings = ['salute:aria-label']
+      saluteContent = interpolateProperties('Hello, my name is :firstName: :lastName:');
+    }
+
+    let modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node).toElement();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual('<div></div>');
+  });
+
+  it('if we can determine that at least one interpolation value is null/undefined, it returns nothing', function() {
+    class MyComponent extends BuildTimeComponent {
+      attributeBindings = ['salute:aria-label']
+      firstName = 'Robert'
+      saluteContent = interpolateProperties('Hello, my name is :firstName: :lastName:');
+    }
+
+    let modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node).toElement();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual('<div></div>');
+  });
+
+  it('if there is default values but the user explicitly nullifies then on the `<propName>Content`, it returns nothing', function() {
+    class MyComponent extends BuildTimeComponent {
+      attributeBindings = ['salute:aria-label']
+      firstName = 'Robert'
+      saluteContent = interpolateProperties('Hello, my name is :firstName: :lastName:');
+      firstNameContent() {
+        return undefined;
+      }
+    }
+
+    let modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node).toElement();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual('<div></div>');
+  });
+
+  it('if there is default values but the user explicitly nullifies then on the `<propName>Content`, it returns nothing', function() {
+    class MyComponent extends BuildTimeComponent {
+      attributeBindings = ['salute:aria-label']
+      firstName = 'Robert'
+      lastName = 'Jackson'
+      saluteContent = interpolateProperties('Hello, my name is :firstName: :lastName:');
+    }
+
+    let modifiedTemplate = processTemplate(`{{my-component firstName=null}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node).toElement();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual('<div></div>');
+
+    modifiedTemplate = processTemplate(`{{my-component firstName=undefined}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node).toElement();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual('<div></div>');
+
+
+    modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node, { firstName: null }).toElement();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual('<div></div>');
+  });
+
+  it('if we can determine that all interpolation values are null/false/undefined but the user passes `skipIfMissing: false`, a string with missing parts is generated', function() {
+    class MyComponent extends BuildTimeComponent {
+      attributeBindings = ['salute:aria-label']
+      saluteContent = interpolateProperties('Hello, my name is :firstName: :lastName:', { skipIfMissing: false });
+    }
+
+    let modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node).toElement();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual('<div aria-label="Hello, my name is  "></div>');
+  });
 });

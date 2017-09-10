@@ -24,28 +24,37 @@ function splitInterpolation(interpolation: string, divisor: string): string[] {
 
 type ConcatPart = AST.MustacheStatement | AST.TextNode;
 
-export default function interpolateProperties(interpolation: string, divisor = ':') {
+export default function interpolateProperties(interpolation: string, { divisor = ':', skipIfMissing = true } = {}) {
   let parts = splitInterpolation(interpolation, divisor);
   return function _interpolate(this: BuildTimeComponent) {
     let concatParts: AppendableToAttrContent[] = [];
     let hasDynamicInterpolation = false;
+    let missingInterpolationValues = false;
     for (let part of parts) {
       if (part[0] === divisor && part[part.length - 1] === divisor) {
         let propName = part.slice(1, part.length - 1);
         let attrValue = this.attrs[propName];
+        let value;
         if (this[`${propName}Content`] && this[`${propName}Content`] !== _interpolate) {
-          concatParts.push(this[`${propName}Content`]());
+          value = this[`${propName}Content`]();
         } else if (attrValue) {
-          concatParts.push(attrValue);
+          value = attrValue;
         } else if (this.options.hasOwnProperty(propName)) {
-          concatParts.push(this.options[propName]);
+          value = this.options[propName];
         } else if (this.hasOwnProperty(propName)) {
-          concatParts.push(this[propName]);
+          value = this[propName];
+        }
+        if (skipIfMissing && value === null || value === undefined || value.type === 'UndefinedLiteral' || value.type === 'NullLiteral') {
+          missingInterpolationValues = true;
+        } else {
+          concatParts.push(value);
         }
       } else {
         concatParts.push(part);
       }
     }
-    return buildAttrContent(concatParts);
+    if (!missingInterpolationValues || !skipIfMissing) {
+      return buildAttrContent(concatParts);
+    }
   }
 }
