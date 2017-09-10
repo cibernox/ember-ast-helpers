@@ -33,7 +33,7 @@ export default function interpolateProperties(interpolation: string, { divisor =
     for (let part of parts) {
       if (part[0] === divisor && part[part.length - 1] === divisor) {
         let propName = part.slice(1, part.length - 1);
-        let attrValue = this.attrs[propName];
+        let attrValue = this.invocationAttrs[propName];
         let value;
         if (this[`${propName}Content`] && this[`${propName}Content`] !== _interpolate) {
           value = this[`${propName}Content`]();
