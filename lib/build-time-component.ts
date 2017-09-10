@@ -34,6 +34,7 @@ export type BuildTimeComponentOptions = {
 }
 
 export type BuildTimeComponentNode = AST.MustacheStatement | AST.BlockStatement
+type InvocationAttrsObject = { [key: string]: AST.Literal | AST.PathExpression | AST.SubExpression }
 
 /**
  * This is supposed to be the main abstraction used by most people to achieve most of their works
@@ -69,26 +70,25 @@ export type BuildTimeComponentNode = AST.MustacheStatement | AST.BlockStatement
  */
 
 export default class BuildTimeComponent {
+  private _defaultTagName: string = 'div'
+  private _defaultClassNames: string[] = []
+  private _defaultClassNameBindings: string[] = []
+  private _defaultAttributeBindings: string[] = ['id', 'class']
+  private _defaultPositionalParams: string[] = []
+  private _contentVisitor?: NodeVisitor
+  private _attrs?: InvocationAttrsObject
   node: BuildTimeComponentNode
-  _defaultTagName: string = 'div'
-  _defaultClassNames: string[] = []
-  _defaultClassNameBindings: string[] = []
-  _defaultAttributeBindings: string[] = ['id', 'class']
-  _contentVisitor?: NodeVisitor
   options: Partial<BuildTimeComponentOptions>
-  attrs: { [key: string]: AST.Literal | AST.PathExpression | AST.SubExpression }
   [key: string]: any
 
   constructor(node: BuildTimeComponentNode, options: Partial<BuildTimeComponentOptions> = {}) {
     this.node = node;
     this.options = options;
-    this.attrs = {};
-    this._populateAttrs(node);
   }
 
   // Getters/setters to mimic Ember components
   get tagName(): string {
-    let tagName = this.attrs.tagName;
+    let tagName = this.invocationAttrs.tagName;
     if (tagName === undefined) {
       return this.options.tagName || this._defaultTagName;
     } else if (tagName.type === 'StringLiteral') {
@@ -99,6 +99,23 @@ export default class BuildTimeComponent {
   }
   set tagName(str: string) {
     this._defaultTagName = str
+  }
+
+  get invocationAttrs(): { [key: string]: AST.Literal | AST.PathExpression | AST.SubExpression } {
+    if (!this._attrs) {
+      let attrs: InvocationAttrsObject = {};
+      this.positionalParams.forEach((param, i) => {
+        if (i < this.node.params.length) {
+          attrs[param] = this.node.params[i];
+        }
+      });
+      this.node.hash.pairs.forEach((pair) => {
+        attrs[pair.key] = pair.value;
+      });
+
+      this._attrs = attrs;
+    }
+    return this._attrs;
   }
 
   get attributeBindings() {
@@ -122,6 +139,13 @@ export default class BuildTimeComponent {
     this._defaultClassNameBindings = this._defaultClassNameBindings.concat(classNameBindings);
   }
 
+  get positionalParams() {
+    return this._defaultPositionalParams.concat(this.options.positionalParams || [])
+  }
+  set positionalParams(positionalParams: string[]) {
+    this._defaultPositionalParams = this._defaultPositionalParams.concat(positionalParams);
+  }
+
   // Internal methods
   get contentVisitor(): NodeVisitor | undefined {
     return this._contentVisitor || this.options.contentVisitor;
@@ -136,8 +160,8 @@ export default class BuildTimeComponent {
       content = appendToAttrContent(this.classNames.join(' '))
     }
     content = this._applyClassNameBindings(content);
-    if (this.attrs.class !== undefined) {
-      content = appendToAttrContent(this.attrs.class, content);
+    if (this.invocationAttrs.class !== undefined) {
+      content = appendToAttrContent(this.invocationAttrs.class, content);
     }
     return content;
   }
@@ -233,11 +257,6 @@ export default class BuildTimeComponent {
   }
 
   // private
-  _populateAttrs(node: BuildTimeComponentNode) {
-    node.hash.pairs.forEach((pair) => {
-      this.attrs[pair.key] = pair.value;
-    });
-  }
 
   /**
    * There is two possible kinds of classNameBindings: boolean or regular
@@ -309,7 +328,7 @@ export default class BuildTimeComponent {
     let bindingParts = binding.split(':');
     let isBooleanBinding = bindingParts.length > (propertyAlias ? 2 : 1);
     let [propName] = bindingParts;
-    let attrValue = this.attrs[propName];
+    let attrValue = this.invocationAttrs[propName];
     let computedValue, staticValue;
     if (this[`${propName}Content`]) {
       computedValue = this[`${propName}Content`]();

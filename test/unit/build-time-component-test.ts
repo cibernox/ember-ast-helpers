@@ -601,6 +601,26 @@ describe('BuildTimeComponent', function() {
     expect(modifiedTemplate).toEqual(`<div is-active="si"></div>`);
   });
 
+  // positional params
+  it('can alias positional params to attributes', function() {
+    class MyComponent extends BuildTimeComponent {
+      positionalParams = ['icon']
+    }
+
+    let modifiedTemplate = processTemplate(`{{my-component "icon-name"}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          debugger;
+          return new MyComponent(node, {
+            attributeBindings: ['icon']
+          }).toElement()
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div icon="icon-name"></div>`);
+  });
+
   // block transform
   it('copies the block over to the element', function() {
     let modifiedTemplate = processTemplate(`{{#my-component title=boundValue}}<span>Inner content</span>{{/my-component}}`, {
