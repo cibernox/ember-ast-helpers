@@ -151,6 +151,43 @@ describe('Helper #interpolateProperties', function() {
     });
 
     expect(modifiedTemplate).toEqual('<div></div>');
+
+    modifiedTemplate = processTemplate(`{{my-component firstName=null lastName=undefined}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node, { firstName: 'Robert', lastName: 'Jackson' }).toElement();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual('<div></div>');
+  });
+
+  it('if the interpolated properties are paths and we pass the `skipIfMissingDynamic: true` options, the entire binding is conditional (only works with 1 interpolation)', function() {
+    class MyComponent extends BuildTimeComponent {
+      attributeBindings = ['salute:aria-label']
+      saluteContent = interpolateProperties('Hello, my name is :firstName:', { skipIfMissingDynamic: true });
+    }
+
+    let modifiedTemplate = processTemplate(`{{my-component firstName=firstName}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node).toElement();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual('<div aria-label={{if firstName (concat "Hello, my name is " firstName)}}></div>');
+
+    modifiedTemplate = processTemplate(`{{my-component firstName=(helper foo bar)}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node).toElement();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual('<div aria-label={{if (helper foo bar) (concat "Hello, my name is " (helper foo bar))}}></div>');
   });
 
   it('if we can determine that at least one interpolation value is null/undefined, it returns nothing', function() {
@@ -274,5 +311,4 @@ describe('Helper #interpolateProperties', function() {
     expect(modifiedTemplate).toEqual('<div aria-label="Hello, my name is Robert {{lastName}}"></div>');
     expect(run).toBe(true)
   });
-
 });
