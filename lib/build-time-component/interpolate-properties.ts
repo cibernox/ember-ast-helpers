@@ -26,10 +26,19 @@ type ConcatPart = AST.MustacheStatement | AST.TextNode;
 export type interpolatePropertiesOptions = {
   divisor?: string
   skipIfMissing?: boolean
+  skipIfMissingDynamic?: boolean
   callback?: (interpolations: { [key: string]: any }) => void
 }
 
-export default function interpolateProperties(interpolation: string, { divisor = ':', skipIfMissing = true, callback }: interpolatePropertiesOptions = {}) {
+function buildConcatIfPresent(cond: AST.PathExpression | AST.SubExpression, concatParts: (AST.Expression | string)[]) {
+  let sanitizedConcatParts = concatParts.map((p) => typeof p === 'string' ? b.string(p) : p);
+  return b.mustache(
+    b.path('if'),
+    [cond, b.sexpr(b.path('concat'), sanitizedConcatParts)]
+  );
+}
+
+export default function interpolateProperties(interpolation: string, { divisor = ':', skipIfMissing = true, skipIfMissingDynamic = false, callback }: interpolatePropertiesOptions = {}) {
   let parts = splitInterpolation(interpolation, divisor);
   return function _interpolate(this: BuildTimeComponent) {
     let concatParts: AppendableToAttrContent[] = [];
@@ -64,6 +73,21 @@ export default function interpolateProperties(interpolation: string, { divisor =
     if (!missingInterpolationValues || !skipIfMissing) {
       if (callback !== undefined) {
         callback.apply(this, [interpolations]);
+      }
+      if (skipIfMissingDynamic) {
+        let interpolationsArray = []
+        for (let key in interpolations) {
+          interpolationsArray.push(interpolations[key]);
+        }
+        if (interpolationsArray.length > 1) {
+          throw new Error("Can't pass `skipIfMissingDynamic: true` with more than one interpolated value");
+        }
+        let interpolation = interpolationsArray[0];
+        if (typeof interpolation === 'object') {
+          if (interpolation.type === 'PathExpression' || interpolation.type === 'SubExpression') {
+            return buildConcatIfPresent(interpolation, <(AST.Expression | string)[]>concatParts);
+          }
+        }
       }
       return buildAttrContent(concatParts);
     }
