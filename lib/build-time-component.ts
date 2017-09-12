@@ -3,7 +3,8 @@ import {
   builders as b,
   traverse,
   AST,
-  NodeVisitor
+  NodeVisitor,
+  preprocess
 } from '@glimmer/syntax';
 
 function dashify(str: string): string {
@@ -154,6 +155,10 @@ export default class BuildTimeComponent {
     this._contentVisitor = visitor;
   }
 
+  layout(args: TemplateStringsArray) {
+    this._layout = preprocess(args[0]);
+  }
+
   classContent(): BuildAttrContent | undefined {
     let content: AST.AttrNode['value'] | undefined;
     if (this.classNames.length > 0) {
@@ -205,7 +210,7 @@ export default class BuildTimeComponent {
         isBooleanBinding,
         computedValue,
         staticValue,
-        attrValue,
+        invocationValue,
         attrName,
         propName,
         truthyValue,
@@ -217,17 +222,17 @@ export default class BuildTimeComponent {
         truthyValue = truthyValue || 'true';
         if (computedValue !== undefined) {
           content = computedValue ? truthyValue : falsyValue;
-        } else if (attrValue !== undefined) {
-          if (AST.isLiteral(attrValue)) {
-            content = attrValue.value ? truthyValue : falsyValue;
+        } else if (invocationValue !== undefined) {
+          if (AST.isLiteral(invocationValue)) {
+            content = invocationValue.value ? truthyValue : falsyValue;
           } else {
-            content = buildConditional(attrValue, truthyValue, falsyValue)
+            content = buildConditional(invocationValue, truthyValue, falsyValue)
           }
         } else {
           content = staticValue ? truthyValue : falsyValue;
         }
       } else {
-        content = computedValue || attrValue || staticValue;
+        content = computedValue || invocationValue || staticValue;
       }
       let attr = buildAttr(<string>attrName, content);
       if (attr !== null) {
@@ -248,6 +253,16 @@ export default class BuildTimeComponent {
       }
       return this.node.program.body;
     } else {
+      if (this._layout !== undefined) {
+        traverse(this._layout, {
+          MustacheStatement: (node) => {
+            if (node.params.length + node.hash.pairs.length === 0) {
+              let propName = node.path.original;
+            }
+          }
+        });
+        return this._layout.body;
+      }
       return [];
     }
   }
@@ -292,7 +307,7 @@ export default class BuildTimeComponent {
         isBooleanBinding,
         computedValue,
         staticValue,
-        attrValue,
+        invocationValue,
         propName,
         truthyValue,
         falsyValue
@@ -305,20 +320,20 @@ export default class BuildTimeComponent {
           if (part) {
             content = appendToAttrContent(part, content);
           }
-        } else if (attrValue !== undefined) {
-          if (AST.isLiteral(attrValue)) {
-            let part = attrValue.value ? truthyValue : falsyValue;
+        } else if (invocationValue !== undefined) {
+          if (AST.isLiteral(invocationValue)) {
+            let part = invocationValue.value ? truthyValue : falsyValue;
             if (part) {
               content = appendToAttrContent(part, content);
             }
           } else {
-            content = appendToAttrContent(buildConditional(attrValue, truthyValue, falsyValue), content)
+            content = appendToAttrContent(buildConditional(invocationValue, truthyValue, falsyValue), content)
           }
         } else {
           content = appendToAttrContent(staticValue ? truthyValue : falsyValue, content);
         }
       } else {
-        content = appendToAttrContent(computedValue || attrValue || staticValue, content);
+        content = appendToAttrContent(computedValue || invocationValue || staticValue, content);
       }
     });
     return content;
@@ -328,17 +343,11 @@ export default class BuildTimeComponent {
     let bindingParts = binding.split(':');
     let isBooleanBinding = bindingParts.length > (propertyAlias ? 2 : 1);
     let [propName] = bindingParts;
-    let attrValue = this.invocationAttrs[propName];
-    let computedValue, staticValue;
-    if (this[`${propName}Content`]) {
-      computedValue = this[`${propName}Content`]();
-    } else {
-      staticValue = this.options[propName] !== undefined ? this.options[propName] : this[propName];
-    }
+    let { invocationValue, computedValue, staticValue } = this._getProperty(propName);
     if (!isBooleanBinding) {
       if (computedValue !== undefined) {
         isBooleanBinding = typeof computedValue === 'boolean';
-      } else if (staticValue === undefined && attrValue !== undefined && attrValue.type === 'BooleanLiteral') {
+      } else if (staticValue === undefined && invocationValue !== undefined && invocationValue.type === 'BooleanLiteral') {
         isBooleanBinding = true;
       } else {
         isBooleanBinding = typeof staticValue === 'boolean';
@@ -357,11 +366,22 @@ export default class BuildTimeComponent {
       isBooleanBinding,
       computedValue,
       staticValue,
-      attrValue,
+      invocationValue,
       propName,
       attrName,
       truthyValue,
       falsyValue
     };
+  }
+
+  _getProperty(propName: string) {
+    let invocationValue = this.invocationAttrs[propName];
+    let computedValue, staticValue;
+    if (this[`${propName}Content`]) {
+      computedValue = this[`${propName}Content`]();
+    } else {
+      staticValue = this.options[propName] !== undefined ? this.options[propName] : this[propName];
+    }
+    return { computedValue, invocationValue, staticValue };
   }
 }

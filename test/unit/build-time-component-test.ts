@@ -2,7 +2,7 @@
 
 import processTemplate from '../helpers/process-template';
 import BuildTimeComponent, { BuildTimeComponentNode, BuildTimeComponentOptions } from '../../lib/build-time-component';
-import { builders as b, AST } from '@glimmer/syntax';
+import { builders as b, AST, preprocess } from '@glimmer/syntax';
 
 describe('BuildTimeComponent', function() {
   // tagName
@@ -610,10 +610,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component "icon-name"}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          debugger;
-          return new MyComponent(node, {
-            attributeBindings: ['icon']
-          }).toElement()
+          return new MyComponent(node, { attributeBindings: ['icon'] }).toElement()
         }
       }
     });
@@ -716,4 +713,45 @@ describe('BuildTimeComponent', function() {
 
     expect(modifiedTemplate).toEqual(`<div><strong class="foobar">Inner content</strong></div><span>outside span</span>`);
   });
+
+  // template
+  it('can have a template, which basically inlines it', function() {
+    class MyComponent extends BuildTimeComponent {
+      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(node, opts = {});
+        this.layout`<span>This is the template</span>`
+      }
+    }
+    let modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          let component = new MyComponent(node);
+          // debugger;
+          return component.toElement();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div><span>This is the template</span></div>`);
+  });
+});
+
+it('can have a template, which basically inlines it', function() {
+  class MyComponent extends BuildTimeComponent {
+    constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+      super(node, opts = {});
+      this.layout`<span>This is the template with a {{value}}</span>`
+    }
+  }
+  let modifiedTemplate = processTemplate(`{{my-component}}`, {
+    MustacheStatement(node) {
+      if (node.path.original === 'my-component') {
+        let component = new MyComponent(node);
+        // debugger;
+        return component.toElement();
+      }
+    }
+  });
+
+  expect(modifiedTemplate).toEqual(`<div><span>This is the template with a literal</span></div>`);
 });
