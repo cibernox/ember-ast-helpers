@@ -498,16 +498,42 @@ export default class BuildTimeComponent {
   }
 
   _transformMustacheParams(node: AST.MustacheStatement) {
-    for (let i = 0; i < node.params.length;) {
-      // do something
-      i++;
+    for (let i = 0; i < node.params.length; i++) {
+      let param = node.params[i];
+      if (param.type === 'PathExpression') {
+        let propValue: string | number | undefined | null | AST.Expression = this._getPropertyValue(param.original);
+        if (propValue === undefined) {
+          node.params[i] = b.undefined()
+        } else if (propValue === null) {
+          node.params[i] = b.null();
+        } else if (typeof propValue === 'string') {
+          node.params[i] = b.string(propValue);
+        } else if (typeof propValue === 'number') {
+          node.params[i] = b.number(propValue);
+        } else {
+          node.params[i] = propValue;
+        }
+      }
     }
   }
 
   _transformMustachePairs(node: AST.MustacheStatement) {
-    for (let i = 0; i < node.hash.pairs.length;) {
-      // do something
-      i++;
+    for (let i = 0; i < node.hash.pairs.length; i++) {
+      let pair = node.hash.pairs[i];
+      if (pair.value.type === 'PathExpression') {
+        let propValue: string | number | undefined | null | AST.Expression = this._getPropertyValue(pair.value.original);
+        if (propValue === undefined) {
+          pair.value = b.undefined()
+        } else if (propValue === null) {
+          pair.value = b.null();
+        } else if (typeof propValue === 'string') {
+          pair.value = b.string(propValue);
+        } else if (typeof propValue === 'number') {
+          pair.value = b.number(propValue);
+        } else {
+          pair.value = propValue;
+        }
+      }
     }
   }
 }
