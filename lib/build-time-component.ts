@@ -379,8 +379,11 @@ export default class BuildTimeComponent {
     if (this[`${propName}Content`]) {
       result.computedValue = this[`${propName}Content`]();
     }
-    if (this.options.hasOwnProperty(propName) || this.hasOwnProperty(propName)) {
+    let staticValue;
+    if (this.options.hasOwnProperty(propName)) {
       result.staticValue = this.options[propName] !== undefined ? this.options[propName] : this[propName];
+    } if ((staticValue = this[propName]) !== undefined) {
+      result.staticValue = staticValue;
     }
     return result;
   }
@@ -425,8 +428,12 @@ export default class BuildTimeComponent {
               i++;
             }
           }
+        } else if (propValue.type === 'PathExpression') {
+          node.children[i] = b.mustache(propValue);
+          i++;
         } else {
-          propValue;
+          node.children[i] = b.mustache(propValue.path, propValue.params, propValue.hash);
+          i++;
         }
       } else {
         i++;
@@ -464,9 +471,15 @@ export default class BuildTimeComponent {
               node.attributes[i].value = b.text(String(propValue.value));
               i++;
             }
+          } else {
+            debugger;
           }
+        } else if (propValue.type === 'PathExpression') {
+          node.attributes[i].value = b.mustache(propValue);
+          i++;
         } else {
-          propValue;
+          node.attributes[i].value = b.mustache(propValue.path, propValue.params, propValue.hash);
+          i++;
         }
       } else {
         i++;
