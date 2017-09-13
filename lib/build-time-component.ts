@@ -256,32 +256,7 @@ export default class BuildTimeComponent {
     } else {
       if (this._layout !== undefined) {
         traverse(this._layout, {
-          // ElementNode: (node) => {
-          //   for(let i = 0; i < node.children.length; i++) {
-
-          //   }
-          // }
-          MustacheStatement: (node) => {
-            if (node.params.length + node.hash.pairs.length === 0 && typeof node.path.original === 'string') {
-              let propValue: string | number | undefined | null | AST.Expression = this._getPropertyValue(node.path.original);
-              if (propValue === undefined || propValue === null) {
-                return null;
-              } else if (typeof propValue === 'string' || typeof propValue === 'number') {
-                return b.text(String(propValue));
-              } else if (AST.isLiteral(propValue)){
-                if (propValue.type === 'StringLiteral') {
-                  return b.text(propValue.value);
-                } else if (propValue.type === 'NumberLiteral' || propValue.type === 'BooleanLiteral') {
-                  return b.text(String(propValue.value));
-                } else {
-                  return null;
-                }
-              } else {
-                propValue;
-              }
-              debugger;
-            }
-          }
+          ElementNode: (node) => this._transformElementChildren(node)
         });
         return this._layout.body;
       }
@@ -418,6 +393,84 @@ export default class BuildTimeComponent {
       return values.invocationValue;
     } else {
       return values.staticValue;;
+    }
+  }
+
+  // TODO: Refactor this madness
+  _transformElementChildren(node: AST.ElementNode) {
+    for (let i = 0; i < node.children.length;) {
+      let child = node.children[i];
+      if (child.type === 'MustacheStatement' && child.params.length + child.hash.pairs.length === 0 && typeof child.path.original === 'string') {
+        let previous = node.children[i - 1];
+        let propValue: string | number | undefined | null | AST.Expression = this._getPropertyValue(child.path.original);
+        if (propValue === undefined || propValue === null) {
+          node.children.splice(i, 1);
+        } else if (typeof propValue === 'string' || typeof propValue === 'number') {
+          if (previous !== undefined && previous.type === 'TextNode') {
+            previous.chars += propValue;
+            node.children.splice(i, 1);
+          } else {
+            node.children[i] = b.text(String(propValue));
+            i++;
+          }
+        } else if (AST.isLiteral(propValue)){
+          if (propValue.type === 'NullLiteral' || propValue.type === 'UndefinedLiteral') {
+            node.children.splice(i, 1);
+          } else if (propValue.type === 'StringLiteral' || propValue.type === 'NumberLiteral' || propValue.type === 'BooleanLiteral') {
+            if (previous !== undefined && previous.type === 'TextNode') {
+              previous.chars += propValue.value;
+              node.children.splice(i, 1);
+            } else {
+              node.children[i] = b.text(String(propValue.value));
+              i++;
+            }
+          }
+        } else {
+          propValue;
+        }
+      } else {
+        i++;
+      }
+    }
+    for (let i = 0; i < node.attributes.length;) {
+      let attr = node.attributes[i];
+      if (attr.value.type === 'MustacheStatement' && attr.value.params.length + attr.value.hash.pairs.length === 0 && typeof attr.value.path.original === 'string') {
+        let previous = node.attributes[i - 1];
+        let propValue: string | number | undefined | null | AST.Expression = this._getPropertyValue(attr.value.path.original);
+        if (propValue === undefined || propValue === null) {
+          node.attributes.splice(i, 1);
+        } else if (typeof propValue === 'string' || typeof propValue === 'number') {
+          if (previous !== undefined && previous.value.type === 'TextNode') {
+            previous.value.chars += propValue;
+            node.attributes.splice(i, 1);
+          } else {
+            node.attributes[i].value = b.text(String(propValue));
+            i++;
+          }
+        } else if (AST.isLiteral(propValue)){
+          if (propValue.type === 'NullLiteral' || propValue.type === 'UndefinedLiteral') {
+            node.attributes.splice(i, 1);
+          } else if (propValue.type === 'BooleanLiteral') {
+            if (propValue.value) {
+              attr.value = b.text('');
+            } else {
+              node.attributes.splice(i, 1);
+            }
+          } else if (propValue.type === 'StringLiteral' || propValue.type === 'NumberLiteral') {
+            if (previous !== undefined && previous.value.type === 'TextNode') {
+              previous.value.chars += propValue.value;
+              node.attributes.splice(i, 1);
+            } else {
+              node.attributes[i].value = b.text(String(propValue.value));
+              i++;
+            }
+          }
+        } else {
+          propValue;
+        }
+      } else {
+        i++;
+      }
     }
   }
 }

@@ -364,41 +364,41 @@ describe('BuildTimeComponent', function() {
   //   expect(modifiedTemplate).toEqual(`<div class="on-duty"></div>`);
   // });
 
-  // it('the `<propName>` attribute is used if no runtime or create time option wins over it', function() {
-  //   class SubComponent extends BuildTimeComponent {
-  //     isActive = true
-  //   }
+  it('the `<propName>` attribute is used if no runtime or create time option wins over it', function() {
+    class SubComponent extends BuildTimeComponent {
+      isActive = true
+    }
 
-  //   let modifiedTemplate = processTemplate(`{{my-component}}`, {
-  //     MustacheStatement(node) {
-  //       if (node.path.original === 'my-component') {
-  //         return new SubComponent(node, {
-  //           classNameBindings: ['isActive:on-duty:reservist'],
-  //         }).toElement();;
-  //       }
-  //     }
-  //   });
+    let modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new SubComponent(node, {
+            classNameBindings: ['isActive:on-duty:reservist'],
+          }).toElement();
+        }
+      }
+    });
 
-  //   expect(modifiedTemplate).toEqual(`<div class="on-duty"></div>`);
+    expect(modifiedTemplate).toEqual(`<div class="on-duty"></div>`);
 
-  //   class AnotherSubComponent extends BuildTimeComponent {
-  //     get isActive() {
-  //       return 'yes';
-  //     }
-  //   }
+    class AnotherSubComponent extends BuildTimeComponent {
+      get isActive() {
+        return 'yes';
+      }
+    }
 
-  //   modifiedTemplate = processTemplate(`{{my-component}}`, {
-  //     MustacheStatement(node) {
-  //       if (node.path.original === 'my-component') {
-  //         return new AnotherSubComponent(node, {
-  //           classNameBindings: ['isActive'],
-  //         }).toElement();
-  //       }
-  //     }
-  //   });
+    modifiedTemplate = processTemplate(`{{my-component}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new AnotherSubComponent(node, {
+            classNameBindings: ['isActive'],
+          }).toElement();
+        }
+      }
+    });
 
-  //   expect(modifiedTemplate).toEqual(`<div class="yes"></div>`);
-  // });
+    expect(modifiedTemplate).toEqual(`<div class="yes"></div>`);
+  });
 
   // it('the `<propName>Content` function trumps over runtime arguments, initialization options or getters', function() {
   //   class SubComponent extends BuildTimeComponent {
@@ -714,150 +714,171 @@ describe('BuildTimeComponent', function() {
   //   expect(modifiedTemplate).toEqual(`<div><strong class="foobar">Inner content</strong></div><span>outside span</span>`);
   // });
 
-  // template
-  it('can have a template, which basically inlines it', function() {
-    class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts = {});
-        this.layout`<span>This is the template</span>`
-      }
-    }
-    let modifiedTemplate = processTemplate(`{{my-component}}`, {
-      MustacheStatement(node) {
-        if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
-        }
-      }
-    });
+  // // template
+  // it('can have a template, which basically inlines it', function() {
+  //   class MyComponent extends BuildTimeComponent {
+  //     constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+  //       super(node, opts);
+  //       this.layout`<span>This is the template</span>`
+  //     }
+  //   }
+  //   let modifiedTemplate = processTemplate(`{{my-component}}`, {
+  //     MustacheStatement(node) {
+  //       if (node.path.original === 'my-component') {
+  //         return new MyComponent(node).toElement();
+  //       }
+  //     }
+  //   });
 
-    expect(modifiedTemplate).toEqual(`<div><span>This is the template</span></div>`);
-  });
+  //   expect(modifiedTemplate).toEqual(`<div><span>This is the template</span></div>`);
+  // });
 
-  it('can have a template with mustaches inside bound to invocation properties with string literals', function() {
-    class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts = {});
-        this.layout`<span>This is the template with a {{value}}</span>`
-      }
-    }
-    let modifiedTemplate = processTemplate(`{{my-component value="literal"}}`, {
-      MustacheStatement(node) {
-        if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
-        }
-      }
-    });
+  // it('can have a template with mustaches inside bound to invocation properties with string literals', function() {
+  //   class MyComponent extends BuildTimeComponent {
+  //     constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+  //       super(node, opts);
+  //       this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+  //     }
+  //   }
+  //   let modifiedTemplate = processTemplate(`{{my-component value="literal"}}`, {
+  //     MustacheStatement(node) {
+  //       if (node.path.original === 'my-component') {
+  //         return new MyComponent(node).toElement();
+  //       }
+  //     }
+  //   });
 
-    expect(modifiedTemplate).toEqual(`<div><span>This is the template with a literal</span></div>`);
-  });
+  //   expect(modifiedTemplate).toEqual(`<div><span title="literal">This is the template with a literal</span></div>`);
+  // });
 
-  it('can have a template with mustaches inside bound to invocation properties with number literals', function() {
-    class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts = {});
-        this.layout`<span>This is the template with a {{value}}</span>`
-      }
-    }
-    let modifiedTemplate = processTemplate(`{{my-component value=2}}`, {
-      MustacheStatement(node) {
-        if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
-        }
-      }
-    });
+  // it('can have a template with mustaches inside bound to invocation properties with number literals', function() {
+  //   class MyComponent extends BuildTimeComponent {
+  //     constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+  //       super(node, opts);
+  //       this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+  //     }
+  //   }
+  //   let modifiedTemplate = processTemplate(`{{my-component value=2}}`, {
+  //     MustacheStatement(node) {
+  //       if (node.path.original === 'my-component') {
+  //         return new MyComponent(node).toElement();
+  //       }
+  //     }
+  //   });
 
-    expect(modifiedTemplate).toEqual(`<div><span>This is the template with a 2</span></div>`);
-  });
+  //   expect(modifiedTemplate).toEqual(`<div><span title="2">This is the template with a 2</span></div>`);
+  // });
 
-  it('can have a template with mustaches inside bound to invocation properties with boolean literals', function() {
-    class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts = {});
-        this.layout`<span>This is the template with a {{value}}</span>`
-      }
-    }
-    let modifiedTemplate = processTemplate(`{{my-component value=false}}`, {
-      MustacheStatement(node) {
-        if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
-        }
-      }
-    });
+  // it('can have a template with mustaches inside bound to invocation properties with boolean literals', function() {
+  //   class MyComponent extends BuildTimeComponent {
+  //     constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+  //       super(node, opts);
+  //       this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+  //     }
+  //   }
+  //   let modifiedTemplate = processTemplate(`{{my-component value=false}}`, {
+  //     MustacheStatement(node) {
+  //       if (node.path.original === 'my-component') {
+  //         return new MyComponent(node).toElement();
+  //       }
+  //     }
+  //   });
 
-    expect(modifiedTemplate).toEqual(`<div><span>This is the template with a false</span></div>`);
-  });
+  //   expect(modifiedTemplate).toEqual(`<div><span>This is the template with a false</span></div>`);
+  // });
 
-  it('can have a template with mustaches inside bound to invocation properties with null literals', function() {
-    class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts = {});
-        this.layout`<span>This is the template with a {{value}}</span>`
-      }
-    }
-    let modifiedTemplate = processTemplate(`{{my-component value=null}}`, {
-      MustacheStatement(node) {
-        if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
-        }
-      }
-    });
+  // it('can have a template with mustaches inside bound to invocation properties with null literals', function() {
+  //   class MyComponent extends BuildTimeComponent {
+  //     constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+  //       super(node, opts);
+  //       this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+  //     }
+  //   }
+  //   let modifiedTemplate = processTemplate(`{{my-component value=null}}`, {
+  //     MustacheStatement(node) {
+  //       if (node.path.original === 'my-component') {
+  //         return new MyComponent(node).toElement();
+  //       }
+  //     }
+  //   });
 
-    expect(modifiedTemplate).toEqual(`<div><span>This is the template with a </span></div>`);
-  });
+  //   expect(modifiedTemplate).toEqual(`<div><span>This is the template with a </span></div>`);
+  // });
 
-  it('can have a template with mustaches inside bound to invocation properties with undefined literals', function() {
-    class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts = {});
-        this.layout`<span>This is the template with a {{value}}</span>`
-      }
-    }
-    let modifiedTemplate = processTemplate(`{{my-component value=undefined}}`, {
-      MustacheStatement(node) {
-        if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
-        }
-      }
-    });
+  // it('can have a template with mustaches inside bound to invocation properties with undefined literals', function() {
+  //   class MyComponent extends BuildTimeComponent {
+  //     constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+  //       super(node, opts);
+  //       this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+  //     }
+  //   }
+  //   let modifiedTemplate = processTemplate(`{{my-component value=undefined}}`, {
+  //     MustacheStatement(node) {
+  //       if (node.path.original === 'my-component') {
+  //         return new MyComponent(node).toElement();
+  //       }
+  //     }
+  //   });
 
-    expect(modifiedTemplate).toEqual(`<div><span>This is the template with a </span></div>`);
-  });
+  //   expect(modifiedTemplate).toEqual(`<div><span>This is the template with a </span></div>`);
+  // });
 
-  it('can have a template with mustaches inside bound to component properties', function() {
-    class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts = {});
-        this.value = 'static value';
-        this.layout`<span>This is the template with a {{value}}</span>`
-      }
-    }
-    let modifiedTemplate = processTemplate(`{{my-component}}`, {
-      MustacheStatement(node) {
-        if (node.path.original === 'my-component') {
-          return new MyComponent(node, {}).toElement();
-        }
-      }
-    });
+  // it('can have a template with mustaches inside bound to component properties', function() {
+  //   class MyComponent extends BuildTimeComponent {
+  //     constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+  //       super(node, opts);
+  //       this.value = 'static value';
+  //       this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+  //     }
+  //   }
+  //   let modifiedTemplate = processTemplate(`{{my-component}}`, {
+  //     MustacheStatement(node) {
+  //       if (node.path.original === 'my-component') {
+  //         return new MyComponent(node, {}).toElement();
+  //       }
+  //     }
+  //   });
 
-    expect(modifiedTemplate).toEqual(`<div><span>This is the template with a static value</span></div>`);
-  });
+  //   expect(modifiedTemplate).toEqual(`<div><span title="static value">This is the template with a static value</span></div>`);
+  // });
 
-  it('can have a template with mustaches inside bound to an initialization option', function() {
-    class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts = {});
-        this.layout`<span>This is the template with a {{value}}</span>`
-      }
-    }
-    let modifiedTemplate = processTemplate(`{{my-component}}`, {
-      MustacheStatement(node) {
-        if (node.path.original === 'my-component') {
-          return new MyComponent(node, { value: 'initialization value' }).toElement();
-        }
-      }
-    });
+  // it('can have a template with mustaches inside bound to an initialization option', function() {
+  //   class MyComponent extends BuildTimeComponent {
+  //     constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+  //       super(node, opts);
+  //       this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+  //     }
+  //   }
+  //   let modifiedTemplate = processTemplate(`{{my-component}}`, {
+  //     MustacheStatement(node) {
+  //       if (node.path.original === 'my-component') {
+  //         return new MyComponent(node, { value: 'initialization value' }).toElement();
+  //       }
+  //     }
+  //   });
 
-    expect(modifiedTemplate).toEqual(`<div><span>This is the template with a initialization value</span></div>`);
-  });
+  //   expect(modifiedTemplate).toEqual(`<div><span title="initialization value">This is the template with a initialization value</span></div>`);
+  // });
+
+  // it('can have a template with mustaches inside bound to an computed values inside <propName>Content', function() {
+  //   class MyComponent extends BuildTimeComponent {
+  //     constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+  //       super(node, opts);
+  //       this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+  //     }
+  //     valueContent() {
+  //       return 'computed value';
+  //     }
+  //   }
+  //   let modifiedTemplate = processTemplate(`{{my-component}}`, {
+  //     MustacheStatement(node) {
+  //       if (node.path.original === 'my-component') {
+  //         return new MyComponent(node).toElement();
+  //       }
+  //     }
+  //   });
+
+  //   expect(modifiedTemplate).toEqual(`<div><span title="computed value">This is the template with a computed value</span></div>`);
+  // });
 });
 
