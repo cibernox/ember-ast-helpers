@@ -256,7 +256,14 @@ export default class BuildTimeComponent {
     } else {
       if (this._layout !== undefined) {
         traverse(this._layout, {
-          ElementNode: (node) => this._transformElementChildren(node)
+          ElementNode: (node) => {
+            this._transformElementChildren(node);
+            this._transformElementAttributes(node);
+          },
+          MustacheStatement: (node) => {
+            this._transformMustacheParams(node);
+            this._transformMustachePairs(node);
+          }
         });
         return this._layout.body;
       }
@@ -439,6 +446,9 @@ export default class BuildTimeComponent {
         i++;
       }
     }
+  }
+
+  _transformElementAttributes(node: AST.ElementNode) {
     for (let i = 0; i < node.attributes.length;) {
       let attr = node.attributes[i];
       if (attr.value.type === 'MustacheStatement' && attr.value.params.length + attr.value.hash.pairs.length === 0 && typeof attr.value.path.original === 'string') {
@@ -484,6 +494,18 @@ export default class BuildTimeComponent {
       } else {
         i++;
       }
+    }
+  }
+
+  _transformMustacheParams(node: AST.MustacheStatement) {
+    for (let i = 0; i < node.params.length;) {
+      // do something
+    }
+  }
+
+  _transformMustachePairs(node: AST.MustacheStatement) {
+    for (let i = 0; i < node.hash.pairs.length;) {
+      // do something
     }
   }
 }
