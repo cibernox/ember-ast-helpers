@@ -500,12 +500,14 @@ export default class BuildTimeComponent {
   _transformMustacheParams(node: AST.MustacheStatement) {
     for (let i = 0; i < node.params.length;) {
       // do something
+      i++;
     }
   }
 
   _transformMustachePairs(node: AST.MustacheStatement) {
     for (let i = 0; i < node.hash.pairs.length;) {
       // do something
+      i++;
     }
   }
 }

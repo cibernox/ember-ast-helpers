@@ -903,7 +903,7 @@ describe('BuildTimeComponent', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span>{{other-component value}}<span>`
+        this.layout`<span>{{other-component value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value="literal"}}`, {
@@ -914,7 +914,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<span>{{other-component "literal"}}</span>`);
+    expect(modifiedTemplate).toEqual(`<div><span>{{other-component "literal"}}</span></div>`);
 
     modifiedTemplate = processTemplate(`{{my-component value=4}}`, {
       MustacheStatement(node) {
@@ -924,7 +924,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<span>{{other-component 4}}</span>`);
+    expect(modifiedTemplate).toEqual(`<div><span>{{other-component 4}}</span></div>`);
 
     modifiedTemplate = processTemplate(`{{my-component value=true}}`, {
       MustacheStatement(node) {
@@ -934,7 +934,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<span>{{other-component true}}</span>`);
+    expect(modifiedTemplate).toEqual(`<div><span>{{other-component true}}</span></div>`);
 
     modifiedTemplate = processTemplate(`{{my-component value=null}}`, {
       MustacheStatement(node) {
@@ -944,7 +944,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<span>{{other-component null}}</span>`);
+    expect(modifiedTemplate).toEqual(`<div><span>{{other-component null}}</span></div>`);
 
     modifiedTemplate = processTemplate(`{{my-component value=undefined}}`, {
       MustacheStatement(node) {
@@ -954,14 +954,14 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<span>{{other-component undefined}}</span>`);
+    expect(modifiedTemplate).toEqual(`<div><span>{{other-component undefined}}</span></div>`);
   });
 
   it('can replace paths on mustache hashes with invocation properties containing literals', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span>{{other-component thing=value}}<span>`
+        this.layout`<span>{{other-component thing=value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value="literal"}}`, {
@@ -972,7 +972,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<span>{{other-component thing="literal"}}</span>`);
+    expect(modifiedTemplate).toEqual(`<div><span>{{other-component thing="literal"}}</span></div>`);
 
     modifiedTemplate = processTemplate(`{{my-component value=4}}`, {
       MustacheStatement(node) {
@@ -982,7 +982,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<span>{{other-component thing=4}}</span>`);
+    expect(modifiedTemplate).toEqual(`<div><span>{{other-component thing=4}}</span></div>`);
 
     modifiedTemplate = processTemplate(`{{my-component value=true}}`, {
       MustacheStatement(node) {
@@ -992,7 +992,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<span>{{other-component thing=true}}</span>`);
+    expect(modifiedTemplate).toEqual(`<div><span>{{other-component thing=true}}</span></div>`);
 
     modifiedTemplate = processTemplate(`{{my-component value=null}}`, {
       MustacheStatement(node) {
@@ -1002,7 +1002,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<span>{{other-component thing=null}}</span>`);
+    expect(modifiedTemplate).toEqual(`<div><span>{{other-component thing=null}}</span></div>`);
 
     modifiedTemplate = processTemplate(`{{my-component value=undefined}}`, {
       MustacheStatement(node) {
@@ -1012,14 +1012,14 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<span>{{other-component thing=undefined}}</span>`);
+    expect(modifiedTemplate).toEqual(`<div><span>{{other-component thing=undefined}}</span></div>`);
   });
 
   it('can replace paths on mustache arguments with invocation properties containing paths', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span>{{other-component value}}<span>`
+        this.layout`<span>{{other-component value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value=fullName}}`, {
@@ -1030,14 +1030,14 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<span>{{other-component fullName}}</span>`);
+    expect(modifiedTemplate).toEqual(`<div><span>{{other-component fullName}}</span></div>`);
   });
 
   it('can replace paths on mustache hashes with invocation properties containing paths', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span>{{other-component thing=value}}<span>`
+        this.layout`<span>{{other-component thing=value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value=fullName}}`, {
@@ -1048,14 +1048,14 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<span>{{other-component thing=fullName}}</span>`);
+    expect(modifiedTemplate).toEqual(`<div><span>{{other-component thing=fullName}}</span></div>`);
   });
 
   it('can replace paths on mustache arguments with invocation properties containing subexpressions', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span>{{other-component value}}<span>`
+        this.layout`<span>{{other-component value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value=(format-date today format="long")}}`, {
@@ -1066,14 +1066,14 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<span>{{other-component (format-date today format="long")}}</span>`);
+    expect(modifiedTemplate).toEqual(`<div><span>{{other-component (format-date today format="long")}}</span></div>`);
   });
 
   it('can replace paths on mustache hashes with invocation properties containing subexpressions', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span>{{other-component thing=value}}<span>`
+        this.layout`<span>{{other-component thing=value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value=(format-date today format="long")}}`, {
@@ -1084,7 +1084,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<span>{{other-component thing=(format-date today format="long")}}</span>`);
+    expect(modifiedTemplate).toEqual(`<div><span>{{other-component thing=(format-date today format="long")}}</span></div>`);
   });
 
   it('can replace paths on mustache arguments with invocation properties static properties', function() {
@@ -1092,7 +1092,7 @@ describe('BuildTimeComponent', function() {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
         this.value = 'static property';
-        this.layout`<span>{{other-component value}}<span>`
+        this.layout`<span>{{other-component value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
@@ -1103,7 +1103,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<span>{{other-component "static property"}}</span>`);
+    expect(modifiedTemplate).toEqual(`<div><span>{{other-component "static property"}}</span></div>`);
   });
 
   it('can replace paths on mustache hashes with invocation properties static properties', function() {
@@ -1111,7 +1111,7 @@ describe('BuildTimeComponent', function() {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
         this.value = 'static property';
-        this.layout`<span>{{other-component thing=value}}<span>`
+        this.layout`<span>{{other-component thing=value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
@@ -1122,14 +1122,14 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<span>{{other-component thing="static property"}}</span>`);
+    expect(modifiedTemplate).toEqual(`<div><span>{{other-component thing="static property"}}</span></div>`);
   });
 
   it('can replace paths on mustache arguments with properties options', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span>{{other-component value}}<span>`
+        this.layout`<span>{{other-component value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
@@ -1140,14 +1140,14 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<span>{{other-component "init option"}}</span>`);
+    expect(modifiedTemplate).toEqual(`<div><span>{{other-component "init option"}}</span></div>`);
   });
 
   it('can replace paths on mustache hashes with properties options', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span>{{other-component thing=value}}<span>`
+        this.layout`<span>{{other-component thing=value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
@@ -1158,14 +1158,14 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<span>{{other-component thing="init option"}}</span>`);
+    expect(modifiedTemplate).toEqual(`<div><span>{{other-component thing="init option"}}</span></div>`);
   });
 
   it('can replace paths on mustache arguments with computed values', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span>{{other-component value}}<span>`
+        this.layout`<span>{{other-component value}}</span>`
       }
 
       valueContent() {
@@ -1180,14 +1180,14 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<span>{{other-component 123}}</span>`);
+    expect(modifiedTemplate).toEqual(`<div><span>{{other-component 123}}</span></div>`);
   });
 
   it('can replace paths on mustache hashes with computed values', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span>{{other-component thing=value}}<span>`
+        this.layout`<span>{{other-component thing=value}}</span>`
       }
 
       valueContent() {
@@ -1202,7 +1202,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<span>{{other-component thing=123}}</span>`);
+    expect(modifiedTemplate).toEqual(`<div><span>{{other-component thing=123}}</span></div>`);
   });
 });
 
