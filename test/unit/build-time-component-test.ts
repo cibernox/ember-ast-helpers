@@ -898,5 +898,23 @@ describe('BuildTimeComponent', function() {
 
     expect(modifiedTemplate).toEqual(`<div><span title={{fullName}}>This is the template with a {{fullName}}</span></div>`);
   });
+
+  it('can replace paths on mustache arguments with invocation properties containing literals');
+  it('can replace paths on mustache hashes with invocation properties containing literals');
+
+  it('can replace paths on mustache arguments with invocation properties containing paths');
+  it('can replace paths on mustache hashes with invocation properties containing paths');
+
+  it('can replace paths on mustache arguments with invocation properties containing subexpressions');
+  it('can replace paths on mustache hashes with invocation properties containing subexpressions');
+
+  it('can replace paths on mustache arguments with invocation properties static properties');
+  it('can replace paths on mustache hashes with invocation properties static properties');
+
+  it('can replace paths on mustache arguments with properties options');
+  it('can replace paths on mustache hashes with properties options');
+
+  it('can replace paths on mustache arguments with computed values');
+  it('can replace paths on mustache hashes with computed values');
 });
 
