@@ -1204,5 +1204,9 @@ describe('BuildTimeComponent', function() {
 
     expect(modifiedTemplate).toEqual(`<div><span>{{other-component thing=123}}</span></div>`);
   });
+
+  it('inserts the component\'s block into the {{yield}} keyword');
+  it('if the component is blockless, it removes the truthy branch of the {{#if hasBlock}} conditional');
+  it('if the component has block, it removes the "else" branch of the {{#if hasBlock}} conditional');
 });
 
