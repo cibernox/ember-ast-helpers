@@ -35,7 +35,8 @@ export type BuildTimeComponentOptions = {
 }
 
 export type BuildTimeComponentNode = AST.MustacheStatement | AST.BlockStatement
-type InvocationAttrsObject = { [key: string]: AST.Literal | AST.PathExpression | AST.SubExpression }
+type InvocationAttrsValue = AST.Literal | AST.PathExpression | AST.SubExpression;
+type InvocationAttrsObject = { [key: string]: InvocationAttrsValue }
 
 /**
  * This is supposed to be the main abstraction used by most people to achieve most of their works
@@ -255,9 +256,30 @@ export default class BuildTimeComponent {
     } else {
       if (this._layout !== undefined) {
         traverse(this._layout, {
+          // ElementNode: (node) => {
+          //   for(let i = 0; i < node.children.length; i++) {
+
+          //   }
+          // }
           MustacheStatement: (node) => {
-            if (node.params.length + node.hash.pairs.length === 0) {
-              let propName = node.path.original;
+            if (node.params.length + node.hash.pairs.length === 0 && typeof node.path.original === 'string') {
+              let propValue: string | number | undefined | null | AST.Expression = this._getPropertyValue(node.path.original);
+              if (propValue === undefined || propValue === null) {
+                return null;
+              } else if (typeof propValue === 'string' || typeof propValue === 'number') {
+                return b.text(String(propValue));
+              } else if (AST.isLiteral(propValue)){
+                if (propValue.type === 'StringLiteral') {
+                  return b.text(propValue.value);
+                } else if (propValue.type === 'NumberLiteral' || propValue.type === 'BooleanLiteral') {
+                  return b.text(String(propValue.value));
+                } else {
+                  return null;
+                }
+              } else {
+                propValue;
+              }
+              debugger;
             }
           }
         });
@@ -343,7 +365,7 @@ export default class BuildTimeComponent {
     let bindingParts = binding.split(':');
     let isBooleanBinding = bindingParts.length > (propertyAlias ? 2 : 1);
     let [propName] = bindingParts;
-    let { invocationValue, computedValue, staticValue } = this._getProperty(propName);
+    let { invocationValue, computedValue, staticValue } = this._getPropertyValues(propName);
     if (!isBooleanBinding) {
       if (computedValue !== undefined) {
         isBooleanBinding = typeof computedValue === 'boolean';
@@ -374,14 +396,28 @@ export default class BuildTimeComponent {
     };
   }
 
-  _getProperty(propName: string) {
-    let invocationValue = this.invocationAttrs[propName];
-    let computedValue, staticValue;
-    if (this[`${propName}Content`]) {
-      computedValue = this[`${propName}Content`]();
-    } else {
-      staticValue = this.options[propName] !== undefined ? this.options[propName] : this[propName];
+  _getPropertyValues(propName: string) {
+    let result: { invocationValue?: InvocationAttrsValue, computedValue?: any, staticValue?: any } = {};
+    if (this.invocationAttrs.hasOwnProperty(propName)) {
+      result.invocationValue = this.invocationAttrs[propName];
     }
-    return { computedValue, invocationValue, staticValue };
+    if (this[`${propName}Content`]) {
+      result.computedValue = this[`${propName}Content`]();
+    }
+    if (this.options.hasOwnProperty(propName) || this.hasOwnProperty(propName)) {
+      result.staticValue = this.options[propName] !== undefined ? this.options[propName] : this[propName];
+    }
+    return result;
+  }
+
+  _getPropertyValue(propName: string) {
+    let values = this._getPropertyValues(propName);
+    if (values.hasOwnProperty('computedValue')) {
+      return values.computedValue;
+    } else if (values.hasOwnProperty('invocationValue')) {
+      return values.invocationValue;
+    } else {
+      return values.staticValue;;
+    }
   }
 }
