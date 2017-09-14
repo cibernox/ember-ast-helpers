@@ -259,6 +259,23 @@ export default class BuildTimeComponent {
     }
     if (this._layout !== undefined) {
       traverse(this._layout, {
+        BlockStatement: (node) => {
+          if (node.path.original !== 'if') {
+            return;
+          }
+          let param = node.params[0];
+          if (param.type === 'PathExpression' && param.original === 'hasBlock') {
+            if (this.node.type === 'BlockStatement') {
+              return node.program.body;
+            } else if (node.inverse) {
+              return node.inverse.body;
+            } else {
+              return null;
+            }
+          }
+        }
+      });
+      traverse(this._layout, {
         ElementNode: (node) => {
           this._transformElementChildren(node);
           this._transformElementAttributes(node);

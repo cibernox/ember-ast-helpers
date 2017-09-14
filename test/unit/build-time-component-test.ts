@@ -1225,7 +1225,7 @@ describe('BuildTimeComponent', function() {
         }
       }
     });
-    debugger;
+
     expect(modifiedTemplate).toEqual(`
         <div>
           <span>
@@ -1237,7 +1237,60 @@ describe('BuildTimeComponent', function() {
     `.trim());
   });
 
-  it('if the component is blockless, it removes the truthy branch of the {{#if hasBlock}} conditional');
-  it('if the component has block, it removes the "else" branch of the {{#if hasBlock}} conditional');
+  it('on blockless components, the truthy branch of {{#if hasBlock}} is removed. In block components, the inverse branch is removed', function() {
+    class MyComponent extends BuildTimeComponent {
+      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(node, opts);
+        this.layout`
+          <span>
+            {{other-component thing=value}}
+            {{#if hasBlock}}
+              {{yield}}
+            {{else}}
+              <i>Default</i>
+              <i>Content</i>
+            {{/if}}
+          </span>
+          <strong>Other content for {{world}}</strong>
+        `
+      }
+    }
+    let modifiedTemplate = processTemplate(`{{my-component world=planet value="Dog"}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node).toElement();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`
+        <div>
+          <span>
+            {{other-component thing="Dog"}}
+              <i>Default</i>
+              <i>Content</i>
+          </span>
+          <strong>Other content for {{planet}}</strong>
+        </div>
+    `.trim());
+
+    modifiedTemplate = processTemplate(`{{#my-component world=planet value="Dog"}}<em>Hello {{world}}</em>Text<div>element</div>{{/my-component}}`, {
+      BlockStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node).toElement();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`
+        <div>
+          <span>
+            {{other-component thing="Dog"}}
+              <em>Hello {{world}}</em>Text<div>element</div>
+          </span>
+          <strong>Other content for {{planet}}</strong>
+        </div>
+  `.trim());
+  });
 });
 
