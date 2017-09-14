@@ -4,7 +4,8 @@ import {
   traverse,
   AST,
   NodeVisitor,
-  preprocess
+  preprocess,
+  print
 } from '@glimmer/syntax';
 
 function dashify(str: string): string {
@@ -250,25 +251,32 @@ export default class BuildTimeComponent {
   get elementChildren(): AST.Statement[] {
     if (this.node.type === 'BlockStatement') {
       if (this.contentVisitor) {
-        traverse(this.node.program, this.contentVisitor)
+        traverse(this.node.program, this.contentVisitor);
       }
-      return this.node.program.body;
-    } else {
-      if (this._layout !== undefined) {
-        traverse(this._layout, {
-          ElementNode: (node) => {
-            this._transformElementChildren(node);
-            this._transformElementAttributes(node);
-          },
-          MustacheStatement: (node) => {
+      if (this._layout === undefined) {
+        return this.node.program.body;
+      }
+    }
+    if (this._layout !== undefined) {
+      traverse(this._layout, {
+        ElementNode: (node) => {
+          this._transformElementChildren(node);
+          this._transformElementAttributes(node);
+        },
+        MustacheStatement: (node) => {
+          if (node.path.original !== 'yield') {
             this._transformMustacheParams(node);
             this._transformMustachePairs(node);
           }
-        });
-        return this._layout.body;
-      }
-      return [];
+        }
+      });
+      traverse(this._layout, {
+        MustacheStatement: (node) => this._replaceYield(node)
+      });
+
+      return this._layout.body;
     }
+    return [];
   }
 
   toElement(): AST.ElementNode {
@@ -410,7 +418,7 @@ export default class BuildTimeComponent {
   _transformElementChildren(node: AST.ElementNode) {
     for (let i = 0; i < node.children.length;) {
       let child = node.children[i];
-      if (child.type === 'MustacheStatement' && child.params.length + child.hash.pairs.length === 0 && typeof child.path.original === 'string') {
+      if (child.type === 'MustacheStatement' && child.path.original !== 'yield' && child.params.length + child.hash.pairs.length === 0 && typeof child.path.original === 'string') {
         let previous = node.children[i - 1];
         let propValue: string | number | undefined | null | AST.Expression = this._getPropertyValue(child.path.original);
         if (propValue === undefined || propValue === null) {
@@ -534,6 +542,12 @@ export default class BuildTimeComponent {
           pair.value = propValue;
         }
       }
+    }
+  }
+
+  _replaceYield(node: AST.MustacheStatement) {
+    if (this.node.type === 'BlockStatement' && node.path.original === 'yield') {
+      return this.node.program.body;
     }
   }
 }

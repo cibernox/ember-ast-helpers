@@ -1205,7 +1205,38 @@ describe('BuildTimeComponent', function() {
     expect(modifiedTemplate).toEqual(`<div><span>{{other-component thing=123}}</span></div>`);
   });
 
-  it('inserts the component\'s block into the {{yield}} keyword');
+  it('inserts the component\'s block into the {{yield}} keyword', function() {
+    class MyComponent extends BuildTimeComponent {
+      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(node, opts);
+        this.layout`
+          <span>
+            {{other-component thing=value}}
+            {{yield}}
+          </span>
+          <strong>Other content for {{world}}</strong>
+        `
+      }
+    }
+    let modifiedTemplate = processTemplate(`{{#my-component world=planet value="Dog"}}<em>Hello {{world}}</em>Text<div>element</div>{{/my-component}}`, {
+      BlockStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node).toElement();
+        }
+      }
+    });
+    debugger;
+    expect(modifiedTemplate).toEqual(`
+        <div>
+          <span>
+            {{other-component thing="Dog"}}
+            <em>Hello {{world}}</em>Text<div>element</div>
+          </span>
+          <strong>Other content for {{planet}}</strong>
+        </div>
+    `.trim());
+  });
+
   it('if the component is blockless, it removes the truthy branch of the {{#if hasBlock}} conditional');
   it('if the component has block, it removes the "else" branch of the {{#if hasBlock}} conditional');
 });
