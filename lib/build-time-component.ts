@@ -296,7 +296,10 @@ export default class BuildTimeComponent {
     return [];
   }
 
-  toElement(): AST.ElementNode {
+  toElement(): AST.ElementNode | AST.Statement[] {
+    if (this.tagName === '') {
+      return this.elementChildren;
+    }
     return b.element(this.tagName, this.elementAttrs, this.elementModifiers, this.elementChildren);
   }
 
