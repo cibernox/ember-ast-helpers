@@ -1292,5 +1292,35 @@ describe('BuildTimeComponent', function() {
         </div>
   `.trim());
   });
+
+  it('[BUGFIX] Replacing attributes on elements does not join them', function() {
+    class MyComponent extends BuildTimeComponent {
+      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(node, opts);
+        this.layout`
+        {{#if hasBlock}}
+          <div class="md-media-{{size}}">
+            {{yield}}
+          </div>
+        {{else}}
+          <img class="md-media-{{size}}" src={{src}} alt={{alt}} title={{title}} />
+        {{/if}}
+        `
+      }
+    }
+    let modifiedTemplate = processTemplate(`{{my-component size="lg" src="/tomster.png" alt="Tomster" title="Tomster"}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node).toElement();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`
+      <div>
+          <img class="md-media-lg" src="/tomster.png" alt="Tomster" title="Tomster"></img>
+        </div>
+      `.trim());
+  });
 });
 

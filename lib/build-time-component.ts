@@ -471,13 +471,8 @@ export default class BuildTimeComponent {
               node.attributes.splice(i, 1);
             }
           } else if (propValue.type === 'StringLiteral' || propValue.type === 'NumberLiteral') {
-            if (previous !== undefined && previous.value.type === 'TextNode') {
-              previous.value.chars += propValue.value;
-              node.attributes.splice(i, 1);
-            } else {
-              node.attributes[i].value = b.text(String(propValue.value));
-              i++;
-            }
+            node.attributes[i].value = b.text(String(propValue.value));
+            i++;
           } else {
             debugger;
           }
