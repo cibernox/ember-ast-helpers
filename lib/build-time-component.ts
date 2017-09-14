@@ -3,7 +3,9 @@ import {
   builders as b,
   traverse,
   AST,
-  NodeVisitor
+  NodeVisitor,
+  preprocess,
+  print
 } from '@glimmer/syntax';
 
 function dashify(str: string): string {
@@ -34,7 +36,8 @@ export type BuildTimeComponentOptions = {
 }
 
 export type BuildTimeComponentNode = AST.MustacheStatement | AST.BlockStatement
-type InvocationAttrsObject = { [key: string]: AST.Literal | AST.PathExpression | AST.SubExpression }
+type InvocationAttrsValue = AST.Literal | AST.PathExpression | AST.SubExpression;
+type InvocationAttrsObject = { [key: string]: InvocationAttrsValue }
 
 /**
  * This is supposed to be the main abstraction used by most people to achieve most of their works
@@ -154,6 +157,10 @@ export default class BuildTimeComponent {
     this._contentVisitor = visitor;
   }
 
+  layout(args: TemplateStringsArray) {
+    this._layout = preprocess(args[0]);
+  }
+
   classContent(): BuildAttrContent | undefined {
     let content: AST.AttrNode['value'] | undefined;
     if (this.classNames.length > 0) {
@@ -205,7 +212,7 @@ export default class BuildTimeComponent {
         isBooleanBinding,
         computedValue,
         staticValue,
-        attrValue,
+        invocationValue,
         attrName,
         propName,
         truthyValue,
@@ -217,17 +224,17 @@ export default class BuildTimeComponent {
         truthyValue = truthyValue || 'true';
         if (computedValue !== undefined) {
           content = computedValue ? truthyValue : falsyValue;
-        } else if (attrValue !== undefined) {
-          if (AST.isLiteral(attrValue)) {
-            content = attrValue.value ? truthyValue : falsyValue;
+        } else if (invocationValue !== undefined) {
+          if (AST.isLiteral(invocationValue)) {
+            content = invocationValue.value ? truthyValue : falsyValue;
           } else {
-            content = buildConditional(attrValue, truthyValue, falsyValue)
+            content = buildConditional(invocationValue, truthyValue, falsyValue)
           }
         } else {
           content = staticValue ? truthyValue : falsyValue;
         }
       } else {
-        content = computedValue || attrValue || staticValue;
+        content = computedValue || invocationValue || staticValue;
       }
       let attr = buildAttr(<string>attrName, content);
       if (attr !== null) {
@@ -244,12 +251,49 @@ export default class BuildTimeComponent {
   get elementChildren(): AST.Statement[] {
     if (this.node.type === 'BlockStatement') {
       if (this.contentVisitor) {
-        traverse(this.node.program, this.contentVisitor)
+        traverse(this.node.program, this.contentVisitor);
       }
-      return this.node.program.body;
-    } else {
-      return [];
+      if (this._layout === undefined) {
+        return this.node.program.body;
+      }
     }
+    if (this._layout !== undefined) {
+      traverse(this._layout, {
+        BlockStatement: (node) => {
+          if (node.path.original !== 'if') {
+            return;
+          }
+          let param = node.params[0];
+          if (param.type === 'PathExpression' && param.original === 'hasBlock') {
+            if (this.node.type === 'BlockStatement') {
+              return node.program.body;
+            } else if (node.inverse) {
+              return node.inverse.body;
+            } else {
+              return null;
+            }
+          }
+        }
+      });
+      traverse(this._layout, {
+        ElementNode: (node) => {
+          this._transformElementChildren(node);
+          this._transformElementAttributes(node);
+        },
+        MustacheStatement: (node) => {
+          if (node.path.original !== 'yield') {
+            this._transformMustacheParams(node);
+            this._transformMustachePairs(node);
+          }
+        }
+      });
+      traverse(this._layout, {
+        MustacheStatement: (node) => this._replaceYield(node)
+      });
+
+      return this._layout.body;
+    }
+    return [];
   }
 
   toElement(): AST.ElementNode {
@@ -292,7 +336,7 @@ export default class BuildTimeComponent {
         isBooleanBinding,
         computedValue,
         staticValue,
-        attrValue,
+        invocationValue,
         propName,
         truthyValue,
         falsyValue
@@ -305,20 +349,20 @@ export default class BuildTimeComponent {
           if (part) {
             content = appendToAttrContent(part, content);
           }
-        } else if (attrValue !== undefined) {
-          if (AST.isLiteral(attrValue)) {
-            let part = attrValue.value ? truthyValue : falsyValue;
+        } else if (invocationValue !== undefined) {
+          if (AST.isLiteral(invocationValue)) {
+            let part = invocationValue.value ? truthyValue : falsyValue;
             if (part) {
               content = appendToAttrContent(part, content);
             }
           } else {
-            content = appendToAttrContent(buildConditional(attrValue, truthyValue, falsyValue), content)
+            content = appendToAttrContent(buildConditional(invocationValue, truthyValue, falsyValue), content)
           }
         } else {
           content = appendToAttrContent(staticValue ? truthyValue : falsyValue, content);
         }
       } else {
-        content = appendToAttrContent(computedValue || attrValue || staticValue, content);
+        content = appendToAttrContent(computedValue || invocationValue || staticValue, content);
       }
     });
     return content;
@@ -328,17 +372,11 @@ export default class BuildTimeComponent {
     let bindingParts = binding.split(':');
     let isBooleanBinding = bindingParts.length > (propertyAlias ? 2 : 1);
     let [propName] = bindingParts;
-    let attrValue = this.invocationAttrs[propName];
-    let computedValue, staticValue;
-    if (this[`${propName}Content`]) {
-      computedValue = this[`${propName}Content`]();
-    } else {
-      staticValue = this.options[propName] !== undefined ? this.options[propName] : this[propName];
-    }
+    let { invocationValue, computedValue, staticValue } = this._getPropertyValues(propName);
     if (!isBooleanBinding) {
       if (computedValue !== undefined) {
         isBooleanBinding = typeof computedValue === 'boolean';
-      } else if (staticValue === undefined && attrValue !== undefined && attrValue.type === 'BooleanLiteral') {
+      } else if (staticValue === undefined && invocationValue !== undefined && invocationValue.type === 'BooleanLiteral') {
         isBooleanBinding = true;
       } else {
         isBooleanBinding = typeof staticValue === 'boolean';
@@ -357,11 +395,176 @@ export default class BuildTimeComponent {
       isBooleanBinding,
       computedValue,
       staticValue,
-      attrValue,
+      invocationValue,
       propName,
       attrName,
       truthyValue,
       falsyValue
     };
+  }
+
+  _getPropertyValues(propName: string) {
+    let result: { invocationValue?: InvocationAttrsValue, computedValue?: any, staticValue?: any } = {};
+    if (this.invocationAttrs.hasOwnProperty(propName)) {
+      result.invocationValue = this.invocationAttrs[propName];
+    }
+    if (this[`${propName}Content`]) {
+      result.computedValue = this[`${propName}Content`]();
+    }
+    let staticValue;
+    if (this.options.hasOwnProperty(propName)) {
+      result.staticValue = this.options[propName] !== undefined ? this.options[propName] : this[propName];
+    } if ((staticValue = this[propName]) !== undefined) {
+      result.staticValue = staticValue;
+    }
+    return result;
+  }
+
+  _getPropertyValue(propName: string) {
+    let values = this._getPropertyValues(propName);
+    if (values.hasOwnProperty('computedValue')) {
+      return values.computedValue;
+    } else if (values.hasOwnProperty('invocationValue')) {
+      return values.invocationValue;
+    } else {
+      return values.staticValue;;
+    }
+  }
+
+  // TODO: Refactor this madness
+  _transformElementChildren(node: AST.ElementNode) {
+    for (let i = 0; i < node.children.length;) {
+      let child = node.children[i];
+      if (child.type === 'MustacheStatement' && child.path.original !== 'yield' && child.params.length + child.hash.pairs.length === 0 && typeof child.path.original === 'string') {
+        let previous = node.children[i - 1];
+        let propValue: string | number | undefined | null | AST.Expression = this._getPropertyValue(child.path.original);
+        if (propValue === undefined || propValue === null) {
+          node.children.splice(i, 1);
+        } else if (typeof propValue === 'string' || typeof propValue === 'number') {
+          if (previous !== undefined && previous.type === 'TextNode') {
+            previous.chars += propValue;
+            node.children.splice(i, 1);
+          } else {
+            node.children[i] = b.text(String(propValue));
+            i++;
+          }
+        } else if (AST.isLiteral(propValue)){
+          if (propValue.type === 'NullLiteral' || propValue.type === 'UndefinedLiteral') {
+            node.children.splice(i, 1);
+          } else if (propValue.type === 'StringLiteral' || propValue.type === 'NumberLiteral' || propValue.type === 'BooleanLiteral') {
+            if (previous !== undefined && previous.type === 'TextNode') {
+              previous.chars += propValue.value;
+              node.children.splice(i, 1);
+            } else {
+              node.children[i] = b.text(String(propValue.value));
+              i++;
+            }
+          }
+        } else if (propValue.type === 'PathExpression') {
+          node.children[i] = b.mustache(propValue);
+          i++;
+        } else {
+          node.children[i] = b.mustache(propValue.path, propValue.params, propValue.hash);
+          i++;
+        }
+      } else {
+        i++;
+      }
+    }
+  }
+
+  _transformElementAttributes(node: AST.ElementNode) {
+    for (let i = 0; i < node.attributes.length;) {
+      let attr = node.attributes[i];
+      if (attr.value.type === 'MustacheStatement' && attr.value.params.length + attr.value.hash.pairs.length === 0 && typeof attr.value.path.original === 'string') {
+        let previous = node.attributes[i - 1];
+        let propValue: string | number | undefined | null | AST.Expression = this._getPropertyValue(attr.value.path.original);
+        if (propValue === undefined || propValue === null) {
+          node.attributes.splice(i, 1);
+        } else if (typeof propValue === 'string' || typeof propValue === 'number') {
+          if (previous !== undefined && previous.value.type === 'TextNode') {
+            previous.value.chars += propValue;
+            node.attributes.splice(i, 1);
+          } else {
+            node.attributes[i].value = b.text(String(propValue));
+            i++;
+          }
+        } else if (AST.isLiteral(propValue)){
+          if (propValue.type === 'NullLiteral' || propValue.type === 'UndefinedLiteral') {
+            node.attributes.splice(i, 1);
+          } else if (propValue.type === 'BooleanLiteral') {
+            if (propValue.value) {
+              attr.value = b.text('');
+            } else {
+              node.attributes.splice(i, 1);
+            }
+          } else if (propValue.type === 'StringLiteral' || propValue.type === 'NumberLiteral') {
+            if (previous !== undefined && previous.value.type === 'TextNode') {
+              previous.value.chars += propValue.value;
+              node.attributes.splice(i, 1);
+            } else {
+              node.attributes[i].value = b.text(String(propValue.value));
+              i++;
+            }
+          } else {
+            debugger;
+          }
+        } else if (propValue.type === 'PathExpression') {
+          node.attributes[i].value = b.mustache(propValue);
+          i++;
+        } else {
+          node.attributes[i].value = b.mustache(propValue.path, propValue.params, propValue.hash);
+          i++;
+        }
+      } else {
+        i++;
+      }
+    }
+  }
+
+  _transformMustacheParams(node: AST.MustacheStatement) {
+    for (let i = 0; i < node.params.length; i++) {
+      let param = node.params[i];
+      if (param.type === 'PathExpression') {
+        let propValue: string | number | undefined | null | AST.Expression = this._getPropertyValue(param.original);
+        if (propValue === undefined) {
+          node.params[i] = b.undefined()
+        } else if (propValue === null) {
+          node.params[i] = b.null();
+        } else if (typeof propValue === 'string') {
+          node.params[i] = b.string(propValue);
+        } else if (typeof propValue === 'number') {
+          node.params[i] = b.number(propValue);
+        } else {
+          node.params[i] = propValue;
+        }
+      }
+    }
+  }
+
+  _transformMustachePairs(node: AST.MustacheStatement) {
+    for (let i = 0; i < node.hash.pairs.length; i++) {
+      let pair = node.hash.pairs[i];
+      if (pair.value.type === 'PathExpression') {
+        let propValue: string | number | undefined | null | AST.Expression = this._getPropertyValue(pair.value.original);
+        if (propValue === undefined) {
+          pair.value = b.undefined()
+        } else if (propValue === null) {
+          pair.value = b.null();
+        } else if (typeof propValue === 'string') {
+          pair.value = b.string(propValue);
+        } else if (typeof propValue === 'number') {
+          pair.value = b.number(propValue);
+        } else {
+          pair.value = propValue;
+        }
+      }
+    }
+  }
+
+  _replaceYield(node: AST.MustacheStatement) {
+    if (this.node.type === 'BlockStatement' && node.path.original === 'yield') {
+      return this.node.program.body;
+    }
   }
 }
