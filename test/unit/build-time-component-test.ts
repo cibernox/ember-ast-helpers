@@ -784,7 +784,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div><span>This is the template with a false</span></div>`);
+    expect(modifiedTemplate).toEqual(`<div><span aria-label="AX: false">This is the template with a false</span></div>`);
   });
 
   it('can have a template with mustaches inside bound to invocation properties with null literals', function() {
@@ -802,7 +802,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div><span>This is the template with a </span></div>`);
+    expect(modifiedTemplate).toEqual(`<div><span aria-label="AX: ">This is the template with a </span></div>`);
   });
 
   it('can have a template with mustaches inside bound to invocation properties with undefined literals', function() {
@@ -820,7 +820,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div><span>This is the template with a </span></div>`);
+    expect(modifiedTemplate).toEqual(`<div><span aria-label="AX: ">This is the template with a </span></div>`);
   });
 
   it('can have a template with mustaches inside bound to component properties', function() {
@@ -839,7 +839,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div><span title="static value">This is the template with a static value</span></div>`);
+    expect(modifiedTemplate).toEqual(`<div><span title="static value" aria-label="AX: static value">This is the template with a static value</span></div>`);
   });
 
   it('can have a template with mustaches inside bound to an initialization option', function() {
@@ -857,7 +857,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div><span title="initialization value">This is the template with a initialization value</span></div>`);
+    expect(modifiedTemplate).toEqual(`<div><span title="initialization value" aria-label="AX: initialization value">This is the template with a initialization value</span></div>`);
   });
 
   it('can have a template with mustaches inside bound to an computed values inside <propName>Content', function() {
@@ -878,7 +878,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div><span title="computed value">This is the template with a computed value</span></div>`);
+    expect(modifiedTemplate).toEqual(`<div><span title="computed value" aria-label="AX: computed value">This is the template with a computed value</span></div>`);
   });
 
   it('can have a template with mustaches inside bound to dynamic invocation arguments', function() {
@@ -896,7 +896,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div><span title={{fullName}}>This is the template with a {{fullName}}</span></div>`);
+    expect(modifiedTemplate).toEqual(`<div><span title={{fullName}} aria-label="AX: {{value}}">This is the template with a {{fullName}}</span></div>`);
   });
 
   it('can replace paths on mustache arguments with invocation properties containing literals', function() {
