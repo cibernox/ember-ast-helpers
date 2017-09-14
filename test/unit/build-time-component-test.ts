@@ -896,7 +896,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div><span title={{fullName}} aria-label="AX: {{value}}">This is the template with a {{fullName}}</span></div>`);
+    expect(modifiedTemplate).toEqual(`<div><span title={{fullName}} aria-label="AX: {{fullName}}">This is the template with a {{fullName}}</span></div>`);
   });
 
   it('can replace paths on mustache arguments with invocation properties containing literals', function() {

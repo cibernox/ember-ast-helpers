@@ -436,35 +436,7 @@ export default class BuildTimeComponent {
     for (let i = 0; i < node.children.length;) {
       let child = node.children[i];
       if (child.type === 'MustacheStatement' && child.path.original !== 'yield' && child.params.length + child.hash.pairs.length === 0 && typeof child.path.original === 'string') {
-        let previous = node.children[i - 1];
-        let propValue: string | number | undefined | null | AST.Expression = this._getPropertyValue(child.path.original);
-        if (propValue === undefined || propValue === null) {
-          node.children.splice(i, 1);
-        } else if (typeof propValue === 'string' || typeof propValue === 'number') {
-          if (previous !== undefined && previous.type === 'TextNode') {
-            previous.chars += propValue;
-            node.children.splice(i, 1);
-          } else {
-            node.children[i] = b.text(String(propValue));
-            i++;
-          }
-        } else if (AST.isLiteral(propValue)){
-          if (propValue.type === 'NullLiteral' || propValue.type === 'UndefinedLiteral') {
-            node.children.splice(i, 1);
-          } else if (propValue.type === 'StringLiteral' || propValue.type === 'NumberLiteral' || propValue.type === 'BooleanLiteral') {
-            if (previous !== undefined && previous.type === 'TextNode') {
-              previous.chars += propValue.value;
-              node.children.splice(i, 1);
-            } else {
-              node.children[i] = b.text(String(propValue.value));
-              i++;
-            }
-          }
-        } else if (propValue.type === 'PathExpression') {
-          node.children[i] = b.mustache(propValue);
-          i++;
-        } else {
-          node.children[i] = b.mustache(propValue.path, propValue.params, propValue.hash);
+        if (this._transformMustacheInCollection(node.children, i)) {
           i++;
         }
       } else {
@@ -516,6 +488,17 @@ export default class BuildTimeComponent {
           node.attributes[i].value = b.mustache(propValue.path, propValue.params, propValue.hash);
           i++;
         }
+      } else if (attr.value.type === 'ConcatStatement') {
+        for (let j = 0; j < attr.value.parts.length;) {
+          if (attr.value.parts[j].type === 'MustacheStatement') {
+            if (this._transformMustacheInCollection(attr.value.parts, j)) {
+              j++;
+            }
+          } else {
+            j++;
+          }
+        }
+        i++;
       } else {
         i++;
       }
@@ -566,5 +549,41 @@ export default class BuildTimeComponent {
     if (this.node.type === 'BlockStatement' && node.path.original === 'yield') {
       return this.node.program.body;
     }
+  }
+
+  _transformMustacheInCollection(siblings: AST.Statement[], i: number): boolean {
+    let child = <AST.MustacheStatement>siblings[i];
+    let previous = siblings[i - 1];
+    let propValue: string | number | undefined | null | AST.Expression = this._getPropertyValue(String(child.path.original));
+    if (propValue === undefined || propValue === null) {
+      siblings.splice(i, 1);
+    } else if (typeof propValue === 'string' || typeof propValue === 'number') {
+      if (previous !== undefined && previous.type === 'TextNode') {
+        previous.chars += propValue;
+        siblings.splice(i, 1);
+      } else {
+        siblings[i] = b.text(String(propValue));
+        return true;
+      }
+    } else if (AST.isLiteral(propValue)){
+      if (propValue.type === 'NullLiteral' || propValue.type === 'UndefinedLiteral') {
+        siblings.splice(i, 1);
+      } else if (propValue.type === 'StringLiteral' || propValue.type === 'NumberLiteral' || propValue.type === 'BooleanLiteral') {
+        if (previous !== undefined && previous.type === 'TextNode') {
+          previous.chars += propValue.value;
+          siblings.splice(i, 1);
+        } else {
+          siblings[i] = b.text(String(propValue.value));
+          return true;
+        }
+      }
+    } else if (propValue.type === 'PathExpression') {
+      siblings[i] = b.mustache(propValue);
+      return true;
+    } else {
+      siblings[i] = b.mustache(propValue.path, propValue.params, propValue.hash);
+      return true;
+    }
+    return false;
   }
 }
