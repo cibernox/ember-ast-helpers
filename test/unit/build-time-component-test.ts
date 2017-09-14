@@ -737,7 +737,7 @@ describe('BuildTimeComponent', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+        this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value="literal"}}`, {
@@ -748,14 +748,14 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div><span title="literal">This is the template with a literal</span></div>`);
+    expect(modifiedTemplate).toEqual(`<div><span title="literal" aria-label="AX: literal">This is the template with a literal</span></div>`);
   });
 
   it('can have a template with mustaches inside bound to invocation properties with number literals', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+        this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value=2}}`, {
@@ -766,14 +766,14 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div><span title="2">This is the template with a 2</span></div>`);
+    expect(modifiedTemplate).toEqual(`<div><span title="2" aria-label="AX: 2">This is the template with a 2</span></div>`);
   });
 
   it('can have a template with mustaches inside bound to invocation properties with boolean literals', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+        this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value=false}}`, {
@@ -784,14 +784,14 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div><span>This is the template with a false</span></div>`);
+    expect(modifiedTemplate).toEqual(`<div><span aria-label="AX: false">This is the template with a false</span></div>`);
   });
 
   it('can have a template with mustaches inside bound to invocation properties with null literals', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+        this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value=null}}`, {
@@ -802,14 +802,14 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div><span>This is the template with a </span></div>`);
+    expect(modifiedTemplate).toEqual(`<div><span aria-label="AX: ">This is the template with a </span></div>`);
   });
 
   it('can have a template with mustaches inside bound to invocation properties with undefined literals', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+        this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value=undefined}}`, {
@@ -820,7 +820,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div><span>This is the template with a </span></div>`);
+    expect(modifiedTemplate).toEqual(`<div><span aria-label="AX: ">This is the template with a </span></div>`);
   });
 
   it('can have a template with mustaches inside bound to component properties', function() {
@@ -828,7 +828,7 @@ describe('BuildTimeComponent', function() {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
         this.value = 'static value';
-        this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+        this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
@@ -839,14 +839,14 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div><span title="static value">This is the template with a static value</span></div>`);
+    expect(modifiedTemplate).toEqual(`<div><span title="static value" aria-label="AX: static value">This is the template with a static value</span></div>`);
   });
 
   it('can have a template with mustaches inside bound to an initialization option', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+        this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
@@ -857,14 +857,14 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div><span title="initialization value">This is the template with a initialization value</span></div>`);
+    expect(modifiedTemplate).toEqual(`<div><span title="initialization value" aria-label="AX: initialization value">This is the template with a initialization value</span></div>`);
   });
 
   it('can have a template with mustaches inside bound to an computed values inside <propName>Content', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+        this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
       valueContent() {
         return 'computed value';
@@ -878,14 +878,14 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div><span title="computed value">This is the template with a computed value</span></div>`);
+    expect(modifiedTemplate).toEqual(`<div><span title="computed value" aria-label="AX: computed value">This is the template with a computed value</span></div>`);
   });
 
   it('can have a template with mustaches inside bound to dynamic invocation arguments', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+        this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value=fullName}}`, {
@@ -896,7 +896,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div><span title={{fullName}}>This is the template with a {{fullName}}</span></div>`);
+    expect(modifiedTemplate).toEqual(`<div><span title={{fullName}} aria-label="AX: {{fullName}}">This is the template with a {{fullName}}</span></div>`);
   });
 
   it('can replace paths on mustache arguments with invocation properties containing literals', function() {
