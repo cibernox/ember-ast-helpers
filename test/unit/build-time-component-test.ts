@@ -737,7 +737,7 @@ describe('BuildTimeComponent', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+        this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value="literal"}}`, {
@@ -748,14 +748,14 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div><span title="literal">This is the template with a literal</span></div>`);
+    expect(modifiedTemplate).toEqual(`<div><span title="literal" aria-label="AX: literal">This is the template with a literal</span></div>`);
   });
 
   it('can have a template with mustaches inside bound to invocation properties with number literals', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+        this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value=2}}`, {
@@ -766,14 +766,14 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div><span title="2">This is the template with a 2</span></div>`);
+    expect(modifiedTemplate).toEqual(`<div><span title="2" aria-label="AX: 2">This is the template with a 2</span></div>`);
   });
 
   it('can have a template with mustaches inside bound to invocation properties with boolean literals', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+        this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value=false}}`, {
@@ -791,7 +791,7 @@ describe('BuildTimeComponent', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+        this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value=null}}`, {
@@ -809,7 +809,7 @@ describe('BuildTimeComponent', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+        this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value=undefined}}`, {
@@ -828,7 +828,7 @@ describe('BuildTimeComponent', function() {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
         this.value = 'static value';
-        this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+        this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
@@ -846,7 +846,7 @@ describe('BuildTimeComponent', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+        this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
@@ -864,7 +864,7 @@ describe('BuildTimeComponent', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+        this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
       valueContent() {
         return 'computed value';
@@ -885,7 +885,7 @@ describe('BuildTimeComponent', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<span title={{value}}>This is the template with a {{value}}</span>`
+        this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value=fullName}}`, {
