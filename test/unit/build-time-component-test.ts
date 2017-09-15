@@ -1349,5 +1349,28 @@ describe('BuildTimeComponent', function() {
 
     expect(modifiedTemplate.trim()).toEqual(`<img class="md-media-lg" src="/tomster.png" alt="Tomster" title="Tomster"></img>`);
   });
+
+  it('References to {{yield}} are removed in blockless components', function() {
+    class MyComponent extends BuildTimeComponent {
+      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(node, opts);
+        this.tagName = '';
+        this.positionalParams = ['icon'];
+        this.layout`
+        {{-paper-underscore icon}}
+        {{yield}}
+        `
+      }
+    }
+    let modifiedTemplate = processTemplate(`{{my-component "some-value"}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node).toElement();
+        }
+      }
+    });
+
+    expect(modifiedTemplate.trim()).toEqual(`{{-paper-underscore "some-value"}}`);
+  });
 });
 

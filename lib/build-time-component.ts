@@ -544,8 +544,13 @@ export default class BuildTimeComponent {
   }
 
   _replaceYield(node: AST.MustacheStatement) {
-    if (this.node.type === 'BlockStatement' && node.path.original === 'yield') {
+    if (node.path.original !== 'yield') {
+      return;
+    }
+    if (this.node.type === 'BlockStatement') {
       return this.node.program.body;
+    } else {
+      return null;
     }
   }
 
