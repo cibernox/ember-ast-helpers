@@ -1,7 +1,7 @@
 # ember-ast-helpers
 
-This library is an utility belt to make AST transforms and shield users as much as possible from
-the nuances of the AST, as it still private API.
+This library is a utility belt to make AST transforms and shield users as much as possible from
+the nuances of the AST, as it is still private API.
 
 
 
@@ -21,7 +21,7 @@ let component = new BuildTimeComponent(node);
 component.toNode()
 ```
 
-This alone mimic the behaviour of `Ember.Component` in some ways:
+This alone mimics the behaviour of `Ember.Component` in some ways:
 - Generates a `div` element
 - Binds the `class=` attribute received on invocation to the class on the element.
 
