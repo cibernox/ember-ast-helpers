@@ -733,6 +733,42 @@ describe('BuildTimeComponent', function() {
     expect(modifiedTemplate).toEqual(`<div><span>This is the template</span></div>`);
   });
 
+  it('can have a template with a top-level mustache', function() {
+    class MyComponent extends BuildTimeComponent {
+      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(node, opts);
+        this.layout`{{value}}`
+      }
+    }
+    let modifiedTemplate = processTemplate(`{{my-component value=42}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node).toElement();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div>42</div>`);
+  });
+
+  it('can have a template which contains a block', function() {
+    class MyComponent extends BuildTimeComponent {
+      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(node, opts);
+        this.layout`<article>{{#each items as |item|}}<div>{{item.name}}</div>{{/each}}</article>`
+      }
+    }
+    let modifiedTemplate = processTemplate(`{{my-component items=people}}`, {
+      MustacheStatement(node) {
+        if (node.path.original === 'my-component') {
+          return new MyComponent(node).toElement();
+        }
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div><article>{{#each people as |item|}}<div>{{item.name}}</div>{{/each}}</article></div>`);
+  });
+
   it('can have a template with mustaches inside bound to invocation properties with string literals', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
@@ -1373,4 +1409,3 @@ describe('BuildTimeComponent', function() {
     expect(modifiedTemplate.trim()).toEqual(`{{-paper-underscore "some-value"}}`);
   });
 });
-
