@@ -258,8 +258,17 @@ export default class BuildTimeComponent {
       }
     }
     if (this._layout !== undefined) {
-      traverse(this._layout, {
+      let nodeVisitor: NodeVisitor = {
         BlockStatement: (node) => {
+          for (let i = 0; i < node.params.length; i++) {
+            let param = node.params[i];
+            if (param.type === 'PathExpression') {
+              let propValue = this._getPropertyValue(param.original);
+              if (propValue && propValue.type === 'PathExpression') {
+                node.params[i] = propValue;
+              }
+            }
+          }
           if (node.path.original === 'if') {
             let param = node.params[0];
             if (param.type === 'PathExpression' && param.original === 'hasBlock') {
@@ -271,6 +280,8 @@ export default class BuildTimeComponent {
                 return null;
               }
             }
+          } else {
+            traverse(node.program, nodeVisitor);
           }
         },
         ElementNode: (node) => {
@@ -282,7 +293,8 @@ export default class BuildTimeComponent {
             return this._transformMustache(node);
           }
         }
-      });
+      };
+      traverse(this._layout, nodeVisitor);
       traverse(this._layout, {
         MustacheStatement: (node) => this._replaceYield(node)
       });
@@ -472,8 +484,6 @@ export default class BuildTimeComponent {
           } else if (propValue.type === 'StringLiteral' || propValue.type === 'NumberLiteral') {
             node.attributes[i].value = b.text(String(propValue.value));
             i++;
-          } else {
-            debugger;
           }
         } else if (propValue.type === 'PathExpression') {
           node.attributes[i].value = b.mustache(propValue);
@@ -577,7 +587,13 @@ export default class BuildTimeComponent {
   _transformMustacheInCollection(siblings: AST.Statement[], i: number): boolean {
     let child = <AST.MustacheStatement>siblings[i];
     let previous = siblings[i - 1];
-    let propValue: string | number | undefined | null | AST.Expression = this._getPropertyValue(String(child.path.original));
+    if (child.path.type !== 'PathExpression') {
+      return true;
+    }
+    if (child.path.parts.length > 1) {
+      return true;
+    }
+    let propValue: string | number | undefined | null | AST.Expression = this._getPropertyValue(String(child.path.parts[0]));
     if (propValue === undefined || propValue === null) {
       siblings.splice(i, 1);
     } else if (typeof propValue === 'string' || typeof propValue === 'number') {
