@@ -282,8 +282,7 @@ export default class BuildTimeComponent {
         },
         MustacheStatement: (node) => {
           if (node.path.original !== 'yield') {
-            this._transformMustacheParams(node);
-            this._transformMustachePairs(node);
+            return this._transformMustache(node);
           }
         }
       });
@@ -501,6 +500,30 @@ export default class BuildTimeComponent {
         i++;
       }
     }
+  }
+
+  _transformMustache(node: AST.MustacheStatement) {
+    if (typeof node.path.original !== 'string') {
+      return;
+    }
+    if (node.path.type === 'PathExpression' && node.params.length === 0 && node.hash.pairs.length === 0) {
+      let propValue: string | number | undefined | null | AST.Expression = this._getPropertyValue(node.path.original);
+      if (typeof propValue === 'string') {
+        return propValue;
+      } else if (typeof propValue === 'number') {
+        return String(propValue);
+      } else if (propValue === undefined || propValue === null) {
+        // return null;
+      } else if (propValue.type === 'StringLiteral') {
+        return propValue;
+      } else if (propValue.type === 'NumberLiteral') {
+        return propValue;
+      } else {
+        throw new Error('BuildTimeComponent doesn\'t know how to handle some mustache statement on the template. Please, open an issue');
+      }
+    }
+    this._transformMustacheParams(node);
+    this._transformMustachePairs(node);
   }
 
   _transformMustacheParams(node: AST.MustacheStatement) {
