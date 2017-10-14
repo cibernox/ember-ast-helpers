@@ -102,6 +102,29 @@ function appendTextNodeToContent(textNode: AST.TextNode, content: AST.AttrNode['
 }
 
 function appendMustacheToContent(mustache: AST.MustacheStatement, content: AST.AttrNode['value'], opts: AppendOptions): AST.AttrNode['value'] {
+  if (mustache.path.type === 'StringLiteral') {
+    debugger;
+    if (content.type === 'TextNode') {
+      if (content.chars !== '') {
+        if (opts.prependSpace) {
+          content.chars += ' ';
+        }
+        content.chars += mustache.path.value;
+      } else {
+        content.chars = mustache.path.value;
+      }
+    } else if (content.type === 'ConcatStatement') {
+      let lastPart = content.parts[content.parts.length - 1];
+      if (opts.prependSpace) {
+        if (lastPart.type === 'TextNode') {
+          lastPart.chars = `${lastPart.chars} ${mustache.path.value}`;
+        } else {
+          content.parts.push(b.text(` ${mustache.path.value}`));
+        }
+      }
+    }
+    return content;
+  }
   if (content.type === 'TextNode') {
     if (content.chars !== '') {
       if (opts.prependSpace) {

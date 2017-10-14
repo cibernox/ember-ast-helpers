@@ -89,7 +89,7 @@ describe('Helper #appendToAttrContent', function() {
     expect(modifiedTemplate).toEqual(`<div class="foo {{bar}} {{baz}}"></div>`);
   });
 
-  it('it can append MustacheStatement', function() {
+  it('it can append MustacheStatement containing paths', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode(attr) {
         attr.value = appendToAttrContent(b.mustache(b.path('bar')), attr.value);
@@ -100,6 +100,19 @@ describe('Helper #appendToAttrContent', function() {
     });
 
     expect(modifiedTemplate).toEqual(`<div class="foo {{bar}} {{baz}} {{if condition "yes" "no"}}"></div>`);
+  });
+
+  it('it can append MustacheStatement containing StringLiterals', function() {
+    let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
+      AttrNode(attr) {
+        attr.value = appendToAttrContent(b.mustache(b.string('bar')), attr.value);
+        attr.value = appendToAttrContent(b.mustache(b.string('baz')), attr.value);
+        attr.value = appendToAttrContent(b.mustache(b.path('if'), [b.path('condition'), b.string('yes'), b.string('no')]), attr.value);
+        return attr;
+      }
+    });
+
+    expect(modifiedTemplate).toEqual(`<div class="foo bar baz {{if condition "yes" "no"}}"></div>`);
   });
 
   it('it can append SubExpressions', function() {
