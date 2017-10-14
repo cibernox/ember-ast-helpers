@@ -103,7 +103,6 @@ function appendTextNodeToContent(textNode: AST.TextNode, content: AST.AttrNode['
 
 function appendMustacheToContent(mustache: AST.MustacheStatement, content: AST.AttrNode['value'], opts: AppendOptions): AST.AttrNode['value'] {
   if (mustache.path.type === 'StringLiteral') {
-    debugger;
     if (content.type === 'TextNode') {
       if (content.chars !== '') {
         if (opts.prependSpace) {
