@@ -33,7 +33,7 @@ let component = new BuildTimeComponent(node, {
   classNames: ['my-component'],
   classNameBindings: ['isActive:is-active:is-disabled'],
   attributeBindings: ['title', 'ariaLabel:aria-label'],
-  active: true
+  isActive: true
 });
 component.toNode()
 ```
