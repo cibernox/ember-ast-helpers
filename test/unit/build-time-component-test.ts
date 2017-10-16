@@ -751,14 +751,14 @@ describe('BuildTimeComponent', function() {
     expect(modifiedTemplate).toEqual(`<div>42</div>`);
   });
 
-  it('can have a template which contains a block', function() {
+  it('can have a template which contains a block with an arg that shadows an external reference', function() {
     class MyComponent extends BuildTimeComponent {
       constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
         super(node, opts);
-        this.layout`<article>{{#each items as |item|}}<div>{{item.name}}</div>{{/each}}</article>`
+        this.layout`<article>{{item.name}}{{#each items as |item|}}<div>{{item.name}}{{some-helper foo thing=bar}}</div>{{/each}}</article>`
       }
     }
-    let modifiedTemplate = processTemplate(`{{my-component items=people}}`, {
+    let modifiedTemplate = processTemplate(`{{my-component items=people item=person foo=bar bar=qux}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
           return new MyComponent(node).toElement();
@@ -766,7 +766,7 @@ describe('BuildTimeComponent', function() {
       }
     });
 
-    expect(modifiedTemplate).toEqual(`<div><article>{{#each people as |item|}}<div>{{item.name}}</div>{{/each}}</article></div>`);
+    expect(modifiedTemplate).toEqual(`<div><article>{{person.name}}{{#each people as |item|}}<div>{{item.name}}{{some-helper bar thing=qux}}<</div>{{/each}}</article></div>`);
   });
 
   it('can have a template with mustaches inside bound to invocation properties with string literals', function() {
