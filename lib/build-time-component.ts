@@ -164,11 +164,11 @@ export default class BuildTimeComponent {
   classContent(): BuildAttrContent | undefined {
     let content: AST.AttrNode['value'] | undefined;
     if (this.classNames.length > 0) {
-      content = appendToAttrContent(this.classNames.join(' '))
+      content = appendToAttrContent(b, this.classNames.join(' '))
     }
     content = this._applyClassNameBindings(content);
     if (this.invocationAttrs.class !== undefined) {
-      content = appendToAttrContent(this.invocationAttrs.class, content);
+      content = appendToAttrContent(b, this.invocationAttrs.class, content);
     }
     return content;
   }
@@ -236,7 +236,7 @@ export default class BuildTimeComponent {
       } else {
         content = computedValue || invocationValue || staticValue;
       }
-      let attr = buildAttr(<string>attrName, content);
+      let attr = buildAttr(b, <string>attrName, content);
       if (attr !== null) {
         attrs.push(attr);
       }
@@ -358,22 +358,22 @@ export default class BuildTimeComponent {
         if (computedValue !== undefined) {
           let part = computedValue ? truthyValue : falsyValue;
           if (part) {
-            content = appendToAttrContent(part, content);
+            content = appendToAttrContent(b, part, content);
           }
         } else if (invocationValue !== undefined) {
           if (AST.isLiteral(invocationValue)) {
             let part = invocationValue.value ? truthyValue : falsyValue;
             if (part) {
-              content = appendToAttrContent(part, content);
+              content = appendToAttrContent(b, part, content);
             }
           } else {
-            content = appendToAttrContent(buildConditional(invocationValue, truthyValue, falsyValue), content)
+            content = appendToAttrContent(b, buildConditional(invocationValue, truthyValue, falsyValue), content)
           }
         } else {
-          content = appendToAttrContent(staticValue ? truthyValue : falsyValue, content);
+          content = appendToAttrContent(b, staticValue ? truthyValue : falsyValue, content);
         }
       } else {
-        content = appendToAttrContent(computedValue || invocationValue || staticValue, content);
+        content = appendToAttrContent(b, computedValue || invocationValue || staticValue, content);
       }
     });
     return content;
