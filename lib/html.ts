@@ -1,11 +1,16 @@
 "use strict";
 
-import { builders as b, AST } from '@glimmer/syntax';
+import { AST } from '@glimmer/syntax';
 export type BuildAttrContent = AST.AttrNode['value'] | AST.Expression | string | undefined;
 export type AppendableToAttrContent = BuildAttrContent | number | null;
-
+export interface Builders {
+  text(chars?: string, loc?: AST.SourceLocation): AST.TextNode
+  attr(name: string, value: AST.AttrNode['value'], loc?: AST.SourceLocation): AST.AttrNode
+  mustache(path: string | AST.PathExpression | AST.Literal, params?: AST.Expression[], hash?: AST.Hash, raw?: boolean, loc?: AST.SourceLocation): AST.MustacheStatement
+  concat(parts: (AST.TextNode | AST.MustacheStatement)[], loc?: AST.SourceLocation): AST.ConcatStatement
+}
 // BuildAttr
-export function buildAttr(name: string, content: BuildAttrContent): AST.AttrNode | null {
+export function buildAttr(b: Builders, name: string, content: BuildAttrContent): AST.AttrNode | null {
   if (content === undefined) {
     return null;
   } else if (typeof content === 'string') {
@@ -25,7 +30,7 @@ export function buildAttr(name: string, content: BuildAttrContent): AST.AttrNode
   } else if (content.type === 'ConcatStatement') {
     if (content.parts.length === 1) {
       content.parts[0]
-      return buildAttr(name, content.parts[0]);
+      return buildAttr(b, name, content.parts[0]);
     }
     return b.attr(name, content);
   } else {
@@ -34,39 +39,41 @@ export function buildAttr(name: string, content: BuildAttrContent): AST.AttrNode
 }
 
 // appendToAttrContent
-export function appendToAttrContent(val: AppendableToAttrContent, content: AST.AttrNode['value'] = b.text(''), opts = { prependSpace: true }): AST.AttrNode['value'] {
-  if (typeof content === 'string') {
+export function appendToAttrContent(b: Builders, val: AppendableToAttrContent, content?: AST.AttrNode['value'], opts = { prependSpace: true }): AST.AttrNode['value'] {
+  if (content === undefined || content === null) {
+    content = b.text('')
+  } else if (typeof content === 'string') {
     content = b.text(content);
   }
   if (val === undefined || val === null) {
     return content;
   }
   if (typeof val === 'string' || typeof val === 'number') {
-    return appendLiteralToContent(String(val), content, opts);
+    return appendLiteralToContent(b, String(val), content, opts);
   }
   switch(val.type) {
   case 'StringLiteral':
-    content = appendLiteralToContent(val.value, content, opts);
+    content = appendLiteralToContent(b, val.value, content, opts);
     break;
   case 'NumberLiteral':
-    content = appendLiteralToContent(String(val.value), content, opts);
+    content = appendLiteralToContent(b, String(val.value), content, opts);
     break;
   case 'PathExpression':
-    content = appendPathToContent(val, content, opts);
+    content = appendPathToContent(b, val, content, opts);
     break;
   case 'SubExpression':
-    content = appendSubExpressionToContent(val, content, opts);
+    content = appendSubExpressionToContent(b, val, content, opts);
     break;
   case 'MustacheStatement':
-    content = appendMustacheToContent(val, content, opts);
+    content = appendMustacheToContent(b, val, content, opts);
     break;
   case 'ConcatStatement':
     val.parts.forEach((part, i) => {
-      content = appendToAttrContent(part, content, i === 0 ? opts : { prependSpace: false });
+      content = appendToAttrContent(b, part, content, i === 0 ? opts : { prependSpace: false });
     });
     break;
   case 'TextNode':
-    content = appendTextNodeToContent(val, content, opts);
+    content = appendTextNodeToContent(b, val, content, opts);
     break;
   }
   return content;
@@ -77,7 +84,7 @@ interface AppendOptions {
   prependSpace: boolean
 }
 
-function appendLiteralToContent(str: string, content: AST.AttrNode['value'], opts: AppendOptions): AST.AttrNode['value'] {
+function appendLiteralToContent(b: Builders, str: string, content: AST.AttrNode['value'], opts: AppendOptions): AST.AttrNode['value'] {
   if (content.type === 'TextNode') {
     if (content.chars === '') {
       content.chars = str;
@@ -97,11 +104,11 @@ function appendLiteralToContent(str: string, content: AST.AttrNode['value'], opt
   return content;
 }
 
-function appendTextNodeToContent(textNode: AST.TextNode, content: AST.AttrNode['value'], opts: AppendOptions): AST.AttrNode['value'] {
-  return appendLiteralToContent(textNode.chars, content, opts);
+function appendTextNodeToContent(b: Builders, textNode: AST.TextNode, content: AST.AttrNode['value'], opts: AppendOptions): AST.AttrNode['value'] {
+  return appendLiteralToContent(b, textNode.chars, content, opts);
 }
 
-function appendMustacheToContent(mustache: AST.MustacheStatement, content: AST.AttrNode['value'], opts: AppendOptions): AST.AttrNode['value'] {
+function appendMustacheToContent(b: Builders, mustache: AST.MustacheStatement, content: AST.AttrNode['value'], opts: AppendOptions): AST.AttrNode['value'] {
   if (mustache.path.type === 'StringLiteral') {
     if (content.type === 'TextNode') {
       if (content.chars !== '') {
@@ -149,19 +156,19 @@ function appendMustacheToContent(mustache: AST.MustacheStatement, content: AST.A
   }
 }
 
-function appendPathToContent(pathExp: AST.PathExpression, content: AST.AttrNode['value'], opts: AppendOptions): AST.AttrNode['value'] {
-  return appendMustacheToContent(b.mustache(pathExp), content, opts);
+function appendPathToContent(b: Builders, pathExp: AST.PathExpression, content: AST.AttrNode['value'], opts: AppendOptions): AST.AttrNode['value'] {
+  return appendMustacheToContent(b, b.mustache(pathExp), content, opts);
 }
 
-function appendSubExpressionToContent(sexpr: AST.SubExpression, content: AST.AttrNode['value'], opts: AppendOptions): AST.AttrNode['value'] {
-  return appendMustacheToContent(b.mustache(sexpr.path, sexpr.params, sexpr.hash), content, opts);
+function appendSubExpressionToContent(b: Builders, sexpr: AST.SubExpression, content: AST.AttrNode['value'], opts: AppendOptions): AST.AttrNode['value'] {
+  return appendMustacheToContent(b, b.mustache(sexpr.path, sexpr.params, sexpr.hash), content, opts);
 }
 
 // buildAttrContent
-export function buildAttrContent(parts: AppendableToAttrContent[]): BuildAttrContent {
+export function buildAttrContent(b: Builders, parts: AppendableToAttrContent[]): BuildAttrContent {
   let content: BuildAttrContent = undefined;
   for(let i = 0; i < parts.length; i++) {
-    content = appendToAttrContent(parts[i], content, { prependSpace: false });
+    content = appendToAttrContent(b, parts[i], content, { prependSpace: false });
   }
   return content;
 }

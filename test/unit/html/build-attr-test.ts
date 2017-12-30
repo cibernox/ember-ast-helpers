@@ -8,7 +8,7 @@ describe('Helper #appendToContent', function() {
   it('it builds attrs given a string', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode() {
-        return buildAttr('not-class', 'new content');
+        return buildAttr(b, 'not-class', 'new content');
       }
     });
 
@@ -18,7 +18,7 @@ describe('Helper #appendToContent', function() {
   it('it builds attrs given a TextNode', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode() {
-        return buildAttr('not-class', b.text('new content'));
+        return buildAttr(b, 'not-class', b.text('new content'));
       }
     });
 
@@ -28,7 +28,7 @@ describe('Helper #appendToContent', function() {
   it('it builds attrs given a StringLiteral', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode() {
-        return buildAttr('not-class', b.string('new content'));
+        return buildAttr(b, 'not-class', b.string('new content'));
       }
     });
 
@@ -38,7 +38,7 @@ describe('Helper #appendToContent', function() {
   it('it builds attrs given a BooleanLiteral', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode() {
-        return buildAttr('not-class', b.boolean(true));
+        return buildAttr(b, 'not-class', b.boolean(true));
       }
     });
 
@@ -46,7 +46,7 @@ describe('Helper #appendToContent', function() {
 
     modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode() {
-        return buildAttr('not-class', b.boolean(false));
+        return buildAttr(b, 'not-class', b.boolean(false));
       }
     });
 
@@ -56,7 +56,7 @@ describe('Helper #appendToContent', function() {
   it('it builds attrs given a NumberLiteral', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode() {
-        return buildAttr('not-class', b.number(2));
+        return buildAttr(b, 'not-class', b.number(2));
       }
     });
 
@@ -64,7 +64,7 @@ describe('Helper #appendToContent', function() {
 
     modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode() {
-        return buildAttr('not-class', b.boolean(false));
+        return buildAttr(b, 'not-class', b.boolean(false));
       }
     });
 
@@ -74,7 +74,7 @@ describe('Helper #appendToContent', function() {
   it('it builds attrs given a PathExpression', function() {
     let modifiedTemplate = processTemplate(`<div class="foo"></div>`, {
       AttrNode() {
-        return buildAttr('not-class', b.path('boundValue'));
+        return buildAttr(b, 'not-class', b.path('boundValue'));
       }
     });
 
@@ -87,7 +87,7 @@ describe('Helper #appendToContent', function() {
         let title = node.hash.pairs.filter((p) => p.key === 'title')[0];
         if (title !== undefined) {
           let attrs = [];
-          let attr = buildAttr('not-class', title.value);
+          let attr = buildAttr(b, 'not-class', title.value);
           if (attr) {
             attrs.push(attr)
           }
@@ -104,7 +104,7 @@ describe('Helper #appendToContent', function() {
       MustacheStatement(node) {
         if (node.path.original === 'some-helper') {
           let condition = b.mustache(b.path('if'), [b.path('cond'), b.string('yes'), b.string('no')]);
-          let attr = <AST.AttrNode> buildAttr('not-class', b.concat([condition]));;
+          let attr = <AST.AttrNode> buildAttr(b, 'not-class', b.concat([condition]));;
           return b.element('div', [attr]);
         }
       }

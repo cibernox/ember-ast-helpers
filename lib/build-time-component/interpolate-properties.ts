@@ -89,7 +89,7 @@ export default function interpolateProperties(interpolation: string, { divisor =
           }
         }
       }
-      return buildAttrContent(concatParts);
+      return buildAttrContent(b, concatParts);
     }
   }
 }

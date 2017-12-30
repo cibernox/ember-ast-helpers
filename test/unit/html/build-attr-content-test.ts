@@ -10,7 +10,7 @@ describe('Helper #buildToAttrContent', function() {
     let modifiedTemplate = processTemplate(`{{my-foo}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-foo') {
-          attrContent = buildAttrContent([
+          attrContent = buildAttrContent(b, [
             'rawstring',
             1,
             b.string('StringLiteral'),
@@ -21,7 +21,7 @@ describe('Helper #buildToAttrContent', function() {
             b.text('TextNode'),
             b.sexpr(b.path('concat'), [b.path('firstName'), b.path('lastName')]),
           ]);
-          let attr = buildAttr('class', attrContent);
+          let attr = buildAttr(b, 'class', attrContent);
           let attrs = attr ? [attr] : [];
           return b.element('div', attrs);
         }
@@ -37,7 +37,7 @@ describe('Helper #buildToAttrContent', function() {
     let modifiedTemplate = processTemplate(`{{my-foo}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-foo') {
-          attrContent = buildAttrContent([
+          attrContent = buildAttrContent(b, [
             'rawstring',
             1,
             b.string('StringLiteral'),
@@ -48,7 +48,7 @@ describe('Helper #buildToAttrContent', function() {
             'LastString'
           ]);
 
-          let attr = buildAttr('class', attrContent);
+          let attr = buildAttr(b, 'class', attrContent);
           let attrs = attr ? [attr] : [];
           return b.element('div', attrs);
         }
