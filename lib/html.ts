@@ -1,16 +1,11 @@
 "use strict";
 
-import { AST } from '@glimmer/syntax';
+import { AST, Syntax } from '@glimmer/syntax';
 export type BuildAttrContent = AST.AttrNode['value'] | AST.Expression | string | undefined;
 export type AppendableToAttrContent = BuildAttrContent | number | null;
-export interface Builders {
-  text(chars?: string, loc?: AST.SourceLocation): AST.TextNode
-  attr(name: string, value: AST.AttrNode['value'], loc?: AST.SourceLocation): AST.AttrNode
-  mustache(path: string | AST.PathExpression | AST.Literal, params?: AST.Expression[], hash?: AST.Hash, raw?: boolean, loc?: AST.SourceLocation): AST.MustacheStatement
-  concat(parts: (AST.TextNode | AST.MustacheStatement)[], loc?: AST.SourceLocation): AST.ConcatStatement
-}
+
 // BuildAttr
-export function buildAttr(b: Builders, name: string, content: BuildAttrContent): AST.AttrNode | null {
+export function buildAttr(b: Syntax["builders"], name: string, content: BuildAttrContent): AST.AttrNode | null {
   if (content === undefined) {
     return null;
   } else if (typeof content === 'string') {
@@ -39,7 +34,7 @@ export function buildAttr(b: Builders, name: string, content: BuildAttrContent):
 }
 
 // appendToAttrContent
-export function appendToAttrContent(b: Builders, val: AppendableToAttrContent, content?: AST.AttrNode['value'], opts = { prependSpace: true }): AST.AttrNode['value'] {
+export function appendToAttrContent(b: Syntax["builders"], val: AppendableToAttrContent, content?: AST.AttrNode['value'], opts = { prependSpace: true }): AST.AttrNode['value'] {
   if (content === undefined || content === null) {
     content = b.text('')
   } else if (typeof content === 'string') {
@@ -84,7 +79,7 @@ interface AppendOptions {
   prependSpace: boolean
 }
 
-function appendLiteralToContent(b: Builders, str: string, content: AST.AttrNode['value'], opts: AppendOptions): AST.AttrNode['value'] {
+function appendLiteralToContent(b: Syntax["builders"], str: string, content: AST.AttrNode['value'], opts: AppendOptions): AST.AttrNode['value'] {
   if (content.type === 'TextNode') {
     if (content.chars === '') {
       content.chars = str;
@@ -104,11 +99,11 @@ function appendLiteralToContent(b: Builders, str: string, content: AST.AttrNode[
   return content;
 }
 
-function appendTextNodeToContent(b: Builders, textNode: AST.TextNode, content: AST.AttrNode['value'], opts: AppendOptions): AST.AttrNode['value'] {
+function appendTextNodeToContent(b: Syntax["builders"], textNode: AST.TextNode, content: AST.AttrNode['value'], opts: AppendOptions): AST.AttrNode['value'] {
   return appendLiteralToContent(b, textNode.chars, content, opts);
 }
 
-function appendMustacheToContent(b: Builders, mustache: AST.MustacheStatement, content: AST.AttrNode['value'], opts: AppendOptions): AST.AttrNode['value'] {
+function appendMustacheToContent(b: Syntax["builders"], mustache: AST.MustacheStatement, content: AST.AttrNode['value'], opts: AppendOptions): AST.AttrNode['value'] {
   if (mustache.path.type === 'StringLiteral') {
     if (content.type === 'TextNode') {
       if (content.chars !== '') {
@@ -156,16 +151,16 @@ function appendMustacheToContent(b: Builders, mustache: AST.MustacheStatement, c
   }
 }
 
-function appendPathToContent(b: Builders, pathExp: AST.PathExpression, content: AST.AttrNode['value'], opts: AppendOptions): AST.AttrNode['value'] {
+function appendPathToContent(b: Syntax["builders"], pathExp: AST.PathExpression, content: AST.AttrNode['value'], opts: AppendOptions): AST.AttrNode['value'] {
   return appendMustacheToContent(b, b.mustache(pathExp), content, opts);
 }
 
-function appendSubExpressionToContent(b: Builders, sexpr: AST.SubExpression, content: AST.AttrNode['value'], opts: AppendOptions): AST.AttrNode['value'] {
+function appendSubExpressionToContent(b: Syntax["builders"], sexpr: AST.SubExpression, content: AST.AttrNode['value'], opts: AppendOptions): AST.AttrNode['value'] {
   return appendMustacheToContent(b, b.mustache(sexpr.path, sexpr.params, sexpr.hash), content, opts);
 }
 
 // buildAttrContent
-export function buildAttrContent(b: Builders, parts: AppendableToAttrContent[]): BuildAttrContent {
+export function buildAttrContent(b: Syntax["builders"], parts: AppendableToAttrContent[]): BuildAttrContent {
   let content: BuildAttrContent = undefined;
   for(let i = 0; i < parts.length; i++) {
     content = appendToAttrContent(b, parts[i], content, { prependSpace: false });

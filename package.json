@@ -38,7 +38,7 @@
     "jest": "^21.0.2",
     "simple-html-tokenizer": "^0.4.1",
     "tslint": "^5.7.0",
-    "typescript": "^2.5.2"
+    "typescript": "^2.6.2"
   },
   "engines": {
     "node": ">= 6"

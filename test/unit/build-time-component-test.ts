@@ -1,15 +1,15 @@
 'use strict';
 
-import processTemplate from '../helpers/process-template';
+import processTemplate, { syntax } from '../helpers/process-template';
+import { AST, Syntax } from '@glimmer/syntax';
 import BuildTimeComponent, { BuildTimeComponentNode, BuildTimeComponentOptions } from '../../lib/build-time-component';
-import { builders as b, AST, preprocess } from '@glimmer/syntax';
 
 describe('BuildTimeComponent', function() {
   // tagName
   it('generates a div by default', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        return new BuildTimeComponent(node).toElement();
+        return new BuildTimeComponent(syntax, node).toElement();
       }
     });
 
@@ -19,7 +19,7 @@ describe('BuildTimeComponent', function() {
   it('honors the default tagName passed to the constructor', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        return new BuildTimeComponent(node, { tagName: 'i' }).toElement();
+        return new BuildTimeComponent(syntax, node, { tagName: 'i' }).toElement();
       }
     });
 
@@ -29,7 +29,7 @@ describe('BuildTimeComponent', function() {
   it('honors tagName received over any default', function() {
     let modifiedTemplate = processTemplate(`{{my-component tagName="span"}}`, {
       MustacheStatement(node) {
-        return new BuildTimeComponent(node, { tagName: 'i' }).toElement();
+        return new BuildTimeComponent(syntax, node, { tagName: 'i' }).toElement();
       }
     });
 
@@ -43,7 +43,7 @@ describe('BuildTimeComponent', function() {
 
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        return new MyComponent(node).toElement();
+        return new MyComponent(syntax, node).toElement();
       }
     });
 
@@ -57,7 +57,7 @@ describe('BuildTimeComponent', function() {
 
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        return new MyComponent(node, { tagName: 'span' }).toElement();
+        return new MyComponent(syntax, node, { tagName: 'span' }).toElement();
       }
     });
 
@@ -68,7 +68,7 @@ describe('BuildTimeComponent', function() {
   it('binds the id attribute', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        return new BuildTimeComponent(node, { id: 'default-id' }).toElement();
+        return new BuildTimeComponent(syntax, node, { id: 'default-id' }).toElement();
       }
     });
 
@@ -76,7 +76,7 @@ describe('BuildTimeComponent', function() {
 
     modifiedTemplate = processTemplate(`{{my-component id="runtime-id"}}`, {
       MustacheStatement(node) {
-        return new BuildTimeComponent(node, { id: 'default-id' }).toElement();
+        return new BuildTimeComponent(syntax, node, { id: 'default-id' }).toElement();
       }
     });
 
@@ -89,7 +89,7 @@ describe('BuildTimeComponent', function() {
     }
     modifiedTemplate = processTemplate(`{{my-component id="runtime-id"}}`, {
       MustacheStatement(node) {
-        return new MyComponent(node, { id: 'default-id' }).toElement();
+        return new MyComponent(syntax, node, { id: 'default-id' }).toElement();
       }
     });
 
@@ -100,7 +100,7 @@ describe('BuildTimeComponent', function() {
   it('honors the default classNames passed to the constructor', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        return new BuildTimeComponent(node, { classNames: ['foo', 'bar'] }).toElement();
+        return new BuildTimeComponent(syntax, node, { classNames: ['foo', 'bar'] }).toElement();
       }
     });
 
@@ -113,7 +113,7 @@ describe('BuildTimeComponent', function() {
     }
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        return new MyComponent(node).toElement();
+        return new MyComponent(syntax, node).toElement();
       }
     });
 
@@ -130,7 +130,7 @@ describe('BuildTimeComponent', function() {
 
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        return new MySubComponent(node, { classNames: ['qux'] }).toElement();
+        return new MySubComponent(syntax, node, { classNames: ['qux'] }).toElement();
       }
     });
 
@@ -141,7 +141,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component class="extra-class"}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new BuildTimeComponent(node, { classNames: ['foo', 'bar'] }).toElement();
+          return new BuildTimeComponent(syntax, node, { classNames: ['foo', 'bar'] }).toElement();
         }
       }
     });
@@ -153,7 +153,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component class=extraClass}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new BuildTimeComponent(node, { classNames: ['foo', 'bar'] }).toElement();
+          return new BuildTimeComponent(syntax, node, { classNames: ['foo', 'bar'] }).toElement();
         }
       }
     });
@@ -165,7 +165,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component class=(concat 'a' 'b')}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new BuildTimeComponent(node, { classNames: ['foo', 'bar'] }).toElement();
+          return new BuildTimeComponent(syntax, node, { classNames: ['foo', 'bar'] }).toElement();
         }
       }
     });
@@ -178,7 +178,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component isActive=true}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new BuildTimeComponent(node, { classNameBindings: ['isActive'] }).toElement();
+          return new BuildTimeComponent(syntax, node, { classNameBindings: ['isActive'] }).toElement();
         }
       }
     });
@@ -188,7 +188,7 @@ describe('BuildTimeComponent', function() {
     modifiedTemplate = processTemplate(`{{my-component isActive=false}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new BuildTimeComponent(node, { classNameBindings: ['isActive'] }).toElement();
+          return new BuildTimeComponent(syntax, node, { classNameBindings: ['isActive'] }).toElement();
         }
       }
     });
@@ -199,7 +199,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component isActive=isActive}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new BuildTimeComponent(node, { classNameBindings: ['isActive'] }).toElement();
+          return new BuildTimeComponent(syntax, node, { classNameBindings: ['isActive'] }).toElement();
         }
       }
     });
@@ -211,7 +211,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component isActive=isActive}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new BuildTimeComponent(node, { classNameBindings: ['isActive:is-active'] }).toElement();
+          return new BuildTimeComponent(syntax, node, { classNameBindings: ['isActive:is-active'] }).toElement();
         }
       }
     });
@@ -223,7 +223,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component isActive=true}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new BuildTimeComponent(node, { classNameBindings: ['isActive:on-duty'] }).toElement();
+          return new BuildTimeComponent(syntax, node, { classNameBindings: ['isActive:on-duty'] }).toElement();
         }
       }
     });
@@ -233,7 +233,7 @@ describe('BuildTimeComponent', function() {
     modifiedTemplate = processTemplate(`{{my-component isActive=false}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new BuildTimeComponent(node, { classNameBindings: ['isActive:on-duty'] }).toElement();
+          return new BuildTimeComponent(syntax, node, { classNameBindings: ['isActive:on-duty'] }).toElement();
         }
       }
     });
@@ -243,7 +243,7 @@ describe('BuildTimeComponent', function() {
     modifiedTemplate = processTemplate(`{{my-component isActive=isActive}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new BuildTimeComponent(node, { classNameBindings: ['isActive:on-duty'] }).toElement();
+          return new BuildTimeComponent(syntax, node, { classNameBindings: ['isActive:on-duty'] }).toElement();
         }
       }
     });
@@ -255,7 +255,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component isActive=true}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new BuildTimeComponent(node, { classNameBindings: ['isActive:on-duty:reservist'] }).toElement();
+          return new BuildTimeComponent(syntax, node, { classNameBindings: ['isActive:on-duty:reservist'] }).toElement();
         }
       }
     });
@@ -265,7 +265,7 @@ describe('BuildTimeComponent', function() {
     modifiedTemplate = processTemplate(`{{my-component isActive=false}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new BuildTimeComponent(node, { classNameBindings: ['isActive:on-duty:reservist'] }).toElement();
+          return new BuildTimeComponent(syntax, node, { classNameBindings: ['isActive:on-duty:reservist'] }).toElement();
         }
       }
     });
@@ -275,7 +275,7 @@ describe('BuildTimeComponent', function() {
     modifiedTemplate = processTemplate(`{{my-component isActive=isActive}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new BuildTimeComponent(node, { classNameBindings: ['isActive:on-duty:reservist'] }).toElement();
+          return new BuildTimeComponent(syntax, node, { classNameBindings: ['isActive:on-duty:reservist'] }).toElement();
         }
       }
     });
@@ -287,7 +287,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new BuildTimeComponent(node, {
+          return new BuildTimeComponent(syntax, node, {
             classNameBindings: ['isActive:on-duty:reservist'],
             isActive: true
           }).toElement();
@@ -300,7 +300,7 @@ describe('BuildTimeComponent', function() {
     modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new BuildTimeComponent(node, {
+          return new BuildTimeComponent(syntax, node, {
             classNameBindings: ['isActive:on-duty:reservist'],
             isActive: false
           }).toElement();
@@ -315,7 +315,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component extraClass="runtime"}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new BuildTimeComponent(node, {
+          return new BuildTimeComponent(syntax, node, {
             classNameBindings: ['extraClass'],
             extraClass: 'override'
           }).toElement();
@@ -335,7 +335,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component extraClass="runtime"}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -353,7 +353,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component isActive=true}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new SubComponent(node, {
+          return new SubComponent(syntax, node, {
             classNameBindings: ['isActive:on-duty:reservist'],
             isActive: true
           }).toElement();
@@ -372,7 +372,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new SubComponent(node, {
+          return new SubComponent(syntax, node, {
             classNameBindings: ['isActive:on-duty:reservist'],
           }).toElement();
         }
@@ -390,7 +390,7 @@ describe('BuildTimeComponent', function() {
     modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new AnotherSubComponent(node, {
+          return new AnotherSubComponent(syntax, node, {
             classNameBindings: ['isActive'],
           }).toElement();
         }
@@ -414,7 +414,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component isActive=false}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new SubSubComponent(node, {
+          return new SubSubComponent(syntax, node, {
             classNameBindings: ['isActive:on-duty:reservist'],
             isActive: false
           }).toElement();
@@ -429,7 +429,7 @@ describe('BuildTimeComponent', function() {
   it('binds properties passed to the constructor', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        return new BuildTimeComponent(node, {
+        return new BuildTimeComponent(syntax, node, {
           title: 'sample title',
           attributeBindings: ['title']
         }).toElement();
@@ -445,7 +445,7 @@ describe('BuildTimeComponent', function() {
     }
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        return new MyComponent(node, { attributeBindings: ['title'] }).toElement();
+        return new MyComponent(syntax, node, { attributeBindings: ['title'] }).toElement();
       }
     });
 
@@ -458,7 +458,7 @@ describe('BuildTimeComponent', function() {
     }
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        return new MyComponent(node, { title: 'sample title' }).toElement();
+        return new MyComponent(syntax, node, { title: 'sample title' }).toElement();
       }
     });
 
@@ -475,7 +475,7 @@ describe('BuildTimeComponent', function() {
 
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        return new MySubComponent(node, {
+        return new MySubComponent(syntax, node, {
           title: 'sample title',
           ariaLabel: 'sample label',
           foo: 'bar',
@@ -490,7 +490,7 @@ describe('BuildTimeComponent', function() {
   it('binds properties passed to the constructor to the right attribute', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        return new BuildTimeComponent(node, {
+        return new BuildTimeComponent(syntax, node, {
           title: 'sample title',
           attributeBindings: ['title:aria-label']
         }).toElement();
@@ -503,7 +503,7 @@ describe('BuildTimeComponent', function() {
   it('binds properties passed to the constructor using the truthy and falsy class', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        return new BuildTimeComponent(node, {
+        return new BuildTimeComponent(syntax, node, {
           title: 'sample title',
           attributeBindings: ['title:title:has-title:no-title']
         }).toElement();
@@ -514,7 +514,7 @@ describe('BuildTimeComponent', function() {
 
     modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
-        return new BuildTimeComponent(node, {
+        return new BuildTimeComponent(syntax, node, {
           title: false,
           attributeBindings: ['title:title:has-title:no-title']
         }).toElement();
@@ -527,7 +527,7 @@ describe('BuildTimeComponent', function() {
   it('binds properties passed on invocation over those passed in the controller', function() {
     let modifiedTemplate = processTemplate(`{{my-component title="real title"}}`, {
       MustacheStatement(node) {
-        return new BuildTimeComponent(node, {
+        return new BuildTimeComponent(syntax, node, {
           title: 'default title',
           attributeBindings: ['title']
         }).toElement();
@@ -540,7 +540,7 @@ describe('BuildTimeComponent', function() {
   it('binds properties passed on invocation over those passed in the controller, to the specified attribute', function() {
     let modifiedTemplate = processTemplate(`{{my-component title="real title"}}`, {
       MustacheStatement(node) {
-        return new BuildTimeComponent(node, {
+        return new BuildTimeComponent(syntax, node, {
           title: 'default title',
           attributeBindings: ['title:aria-label']
         }).toElement();
@@ -553,7 +553,7 @@ describe('BuildTimeComponent', function() {
   it('binds properties passed on invocation over those passed in the controller using the truthy class', function() {
     let modifiedTemplate = processTemplate(`{{my-component isDisabled=true}}`, {
       MustacheStatement(node) {
-        return new BuildTimeComponent(node, {
+        return new BuildTimeComponent(syntax, node, {
           isDisabled: false,
           attributeBindings: ['isDisabled:disabled:nope']
         }).toElement();
@@ -577,7 +577,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component isActive=false}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new SubSubComponent(node, {
+          return new SubSubComponent(syntax, node, {
             attributeBindings: ['isActive:is-active'],
             isActive: 'non'
           }).toElement()
@@ -590,7 +590,7 @@ describe('BuildTimeComponent', function() {
     modifiedTemplate = processTemplate(`{{my-component isActive=false}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new SubSubComponent(node, {
+          return new SubSubComponent(syntax, node, {
             attributeBindings: ['isActive:is-active:si'],
             isActive: 'non'
           }).toElement()
@@ -610,7 +610,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component "icon-name"}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node, { attributeBindings: ['icon'] }).toElement()
+          return new MyComponent(syntax, node, { attributeBindings: ['icon'] }).toElement()
         }
       }
     });
@@ -623,7 +623,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{#my-component title=boundValue}}<span>Inner content</span>{{/my-component}}`, {
       BlockStatement(node) {
         if (node.path.original === 'my-component') {
-          return new BuildTimeComponent(node).toElement();
+          return new BuildTimeComponent(syntax, node).toElement();
         }
       }
     });
@@ -635,10 +635,10 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{#my-component}}<span>Inner content</span>{{/my-component}}<span>outside span</span>`, {
       BlockStatement(node) {
         if (node.path.original === 'my-component') {
-          return new BuildTimeComponent(node, {
+          return new BuildTimeComponent(syntax, node, {
             contentVisitor: {
               ElementNode(node: AST.ElementNode) {
-                return b.element('strong', [], [], node.children);
+                return syntax.builders.element('strong', [], [], node.children);
               }
             }
           }).toElement();
@@ -653,7 +653,7 @@ describe('BuildTimeComponent', function() {
     class MyComponent extends BuildTimeComponent {
       contentVisitor = {
         ElementNode(node: AST.ElementNode) {
-          return b.element('strong', [], [], node.children);
+          return syntax.builders.element('strong', [], [], node.children);
         }
       }
     }
@@ -661,7 +661,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{#my-component}}<span>Inner content</span>{{/my-component}}<span>outside span</span>`, {
       BlockStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -673,7 +673,7 @@ describe('BuildTimeComponent', function() {
     class MyComponent extends BuildTimeComponent {
       contentVisitor = {
         ElementNode(node: AST.ElementNode) {
-          return b.element('strong', [], [], node.children);
+          return syntax.builders.element('strong', [], [], node.children);
         }
       }
     }
@@ -681,7 +681,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}<span>outside span</span>`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -696,9 +696,9 @@ describe('BuildTimeComponent', function() {
           let pair = this.node.hash.pairs.find((p) => p.key === 'classForChildren');
           let attrs: AST.AttrNode[] = [];
           if (pair && pair.value.type === 'StringLiteral') {
-            attrs.push(b.attr('class', b.text(pair.value.value)));
+            attrs.push(syntax.builders.attr('class', syntax.builders.text(pair.value.value)));
           }
-          return b.element('strong', attrs, [], node.children);
+          return syntax.builders.element('strong', attrs, [], node.children);
         }
       }
     }
@@ -706,7 +706,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{#my-component classForChildren="foobar"}}<span>Inner content</span>{{/my-component}}<span>outside span</span>`, {
       BlockStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -717,15 +717,15 @@ describe('BuildTimeComponent', function() {
   // template
   it('can have a template, which basically inlines it', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.layout`<span>This is the template</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -735,15 +735,15 @@ describe('BuildTimeComponent', function() {
 
   it('can have a template with a top-level mustache', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.layout`{{value}}`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value=42}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -753,15 +753,15 @@ describe('BuildTimeComponent', function() {
 
   it('can have a template which contains a block', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.layout`<article>{{#each items as |item|}}<div>{{item.name}}</div>{{/each}}</article>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component items=people}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -771,15 +771,15 @@ describe('BuildTimeComponent', function() {
 
   it('can have a template with mustaches inside bound to invocation properties with string literals', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value="literal"}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -789,15 +789,15 @@ describe('BuildTimeComponent', function() {
 
   it('can have a template with mustaches inside bound to invocation properties with number literals', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value=2}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -807,15 +807,15 @@ describe('BuildTimeComponent', function() {
 
   it('can have a template with mustaches inside bound to invocation properties with boolean literals', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value=false}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -825,15 +825,15 @@ describe('BuildTimeComponent', function() {
 
   it('can have a template with mustaches inside bound to invocation properties with null literals', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value=null}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -843,15 +843,15 @@ describe('BuildTimeComponent', function() {
 
   it('can have a template with mustaches inside bound to invocation properties with undefined literals', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value=undefined}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -861,8 +861,8 @@ describe('BuildTimeComponent', function() {
 
   it('can have a template with mustaches inside bound to component properties', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.value = 'static value';
         this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
@@ -870,7 +870,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node, {}).toElement();
+          return new MyComponent(syntax, node, {}).toElement();
         }
       }
     });
@@ -880,15 +880,15 @@ describe('BuildTimeComponent', function() {
 
   it('can have a template with mustaches inside bound to an initialization option', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node, { value: 'initialization value' }).toElement();
+          return new MyComponent(syntax, node, { value: 'initialization value' }).toElement();
         }
       }
     });
@@ -898,8 +898,8 @@ describe('BuildTimeComponent', function() {
 
   it('can have a template with mustaches inside bound to an computed values inside <propName>Content', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
       valueContent() {
@@ -909,7 +909,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -919,15 +919,15 @@ describe('BuildTimeComponent', function() {
 
   it('can have a template with mustaches inside bound to dynamic invocation arguments', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.layout`<span title={{value}} aria-label="AX: {{value}}">This is the template with a {{value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value=fullName}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -937,15 +937,15 @@ describe('BuildTimeComponent', function() {
 
   it('can replace paths on mustache arguments with invocation properties containing literals', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.layout`<span>{{other-component value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value="literal"}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -955,7 +955,7 @@ describe('BuildTimeComponent', function() {
     modifiedTemplate = processTemplate(`{{my-component value=4}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -965,7 +965,7 @@ describe('BuildTimeComponent', function() {
     modifiedTemplate = processTemplate(`{{my-component value=true}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -975,7 +975,7 @@ describe('BuildTimeComponent', function() {
     modifiedTemplate = processTemplate(`{{my-component value=null}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -985,7 +985,7 @@ describe('BuildTimeComponent', function() {
     modifiedTemplate = processTemplate(`{{my-component value=undefined}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -995,15 +995,15 @@ describe('BuildTimeComponent', function() {
 
   it('can replace paths on mustache hashes with invocation properties containing literals', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.layout`<span>{{other-component thing=value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value="literal"}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -1013,7 +1013,7 @@ describe('BuildTimeComponent', function() {
     modifiedTemplate = processTemplate(`{{my-component value=4}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -1023,7 +1023,7 @@ describe('BuildTimeComponent', function() {
     modifiedTemplate = processTemplate(`{{my-component value=true}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -1033,7 +1033,7 @@ describe('BuildTimeComponent', function() {
     modifiedTemplate = processTemplate(`{{my-component value=null}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -1043,7 +1043,7 @@ describe('BuildTimeComponent', function() {
     modifiedTemplate = processTemplate(`{{my-component value=undefined}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -1053,15 +1053,15 @@ describe('BuildTimeComponent', function() {
 
   it('can replace paths on mustache arguments with invocation properties containing paths', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.layout`<span>{{other-component value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value=fullName}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -1071,15 +1071,15 @@ describe('BuildTimeComponent', function() {
 
   it('can replace paths on mustache hashes with invocation properties containing paths', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.layout`<span>{{other-component thing=value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value=fullName}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -1089,15 +1089,15 @@ describe('BuildTimeComponent', function() {
 
   it('can replace paths on mustache arguments with invocation properties containing subexpressions', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.layout`<span>{{other-component value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value=(format-date today format="long")}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -1107,15 +1107,15 @@ describe('BuildTimeComponent', function() {
 
   it('can replace paths on mustache hashes with invocation properties containing subexpressions', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.layout`<span>{{other-component thing=value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component value=(format-date today format="long")}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -1125,8 +1125,8 @@ describe('BuildTimeComponent', function() {
 
   it('can replace paths on mustache arguments with invocation properties static properties', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.value = 'static property';
         this.layout`<span>{{other-component value}}</span>`
       }
@@ -1134,7 +1134,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -1144,8 +1144,8 @@ describe('BuildTimeComponent', function() {
 
   it('can replace paths on mustache hashes with invocation properties static properties', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.value = 'static property';
         this.layout`<span>{{other-component thing=value}}</span>`
       }
@@ -1153,7 +1153,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -1163,15 +1163,15 @@ describe('BuildTimeComponent', function() {
 
   it('can replace paths on mustache arguments with properties options', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.layout`<span>{{other-component value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node, { value: 'init option' }).toElement();
+          return new MyComponent(syntax, node, { value: 'init option' }).toElement();
         }
       }
     });
@@ -1181,15 +1181,15 @@ describe('BuildTimeComponent', function() {
 
   it('can replace paths on mustache hashes with properties options', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.layout`<span>{{other-component thing=value}}</span>`
       }
     }
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node, { value: 'init option' }).toElement();
+          return new MyComponent(syntax, node, { value: 'init option' }).toElement();
         }
       }
     });
@@ -1199,8 +1199,8 @@ describe('BuildTimeComponent', function() {
 
   it('can replace paths on mustache arguments with computed values', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.layout`<span>{{other-component value}}</span>`
       }
 
@@ -1211,7 +1211,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -1221,8 +1221,8 @@ describe('BuildTimeComponent', function() {
 
   it('can replace paths on mustache hashes with computed values', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.layout`<span>{{other-component thing=value}}</span>`
       }
 
@@ -1233,7 +1233,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -1243,8 +1243,8 @@ describe('BuildTimeComponent', function() {
 
   it('inserts the component\'s block into the {{yield}} keyword', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.layout`
           <span>
             {{other-component thing=value}}
@@ -1257,7 +1257,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{#my-component world=planet value="Dog"}}<em>Hello {{world}}</em>Text<div>element</div>{{/my-component}}`, {
       BlockStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -1275,8 +1275,8 @@ describe('BuildTimeComponent', function() {
 
   it('on blockless components, the truthy branch of {{#if hasBlock}} is removed. In block components, the inverse branch is removed', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.layout`
           <span>
             {{other-component thing=value}}
@@ -1294,7 +1294,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component world=planet value="Dog"}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -1313,7 +1313,7 @@ describe('BuildTimeComponent', function() {
     modifiedTemplate = processTemplate(`{{#my-component world=planet value="Dog"}}<em>Hello {{world}}</em>Text<div>element</div>{{/my-component}}`, {
       BlockStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -1331,8 +1331,8 @@ describe('BuildTimeComponent', function() {
 
   it('[BUGFIX] Replacing attributes on elements does not join them', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.layout`
         {{#if hasBlock}}
           <div class="md-media-{{size}}">
@@ -1347,7 +1347,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component size="lg" src="/tomster.png" alt="Tomster" title="Tomster"}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -1361,8 +1361,8 @@ describe('BuildTimeComponent', function() {
 
   it('components can be tagless', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
        this.tagName = '';
         this.layout`
         {{#if hasBlock}}
@@ -1378,7 +1378,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component size="lg" src="/tomster.png" alt="Tomster" title="Tomster"}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
@@ -1388,8 +1388,8 @@ describe('BuildTimeComponent', function() {
 
   it('References to {{yield}} are removed in blockless components', function() {
     class MyComponent extends BuildTimeComponent {
-      constructor(node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
-        super(node, opts);
+      constructor(syntax: Syntax, node: BuildTimeComponentNode, opts?: Partial<BuildTimeComponentOptions>) {
+        super(syntax, node, opts);
         this.tagName = '';
         this.positionalParams = ['icon'];
         this.layout`
@@ -1401,7 +1401,7 @@ describe('BuildTimeComponent', function() {
     let modifiedTemplate = processTemplate(`{{my-component "some-value"}}`, {
       MustacheStatement(node) {
         if (node.path.original === 'my-component') {
-          return new MyComponent(node).toElement();
+          return new MyComponent(syntax, node).toElement();
         }
       }
     });
