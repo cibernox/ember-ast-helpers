@@ -1,6 +1,6 @@
 {
   "name": "ember-ast-helpers",
-  "version": "0.3.5",
+  "version": "0.4.0",
   "description": "Utility belt to level-up your Ember AST transforms",
   "keywords": [
     "ember",
@@ -27,11 +27,9 @@
     "test:coverage": "jest --coverage",
     "test:watch": "jest --watchAll --notify"
   },
-  "dependencies": {
-    "@glimmer/compiler": "^0.27.0",
-    "@glimmer/syntax": "^0.27.0"
-  },
   "devDependencies": {
+    "@glimmer/compiler": "^0.27.0",
+    "@glimmer/syntax": "^0.27.0",
     "@types/jest": "^20.0.8",
     "eslint-plugin-node": "^5.1.0",
     "glob": "^7.0.0",
