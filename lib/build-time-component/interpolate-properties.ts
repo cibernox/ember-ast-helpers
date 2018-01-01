@@ -1,4 +1,4 @@
-import { builders as b, AST } from '@glimmer/syntax';
+import { AST, Syntax } from '@glimmer/syntax';
 import { buildAttrContent, AppendableToAttrContent } from '../html';
 import BuildTimeComponent from '../build-time-component';
 
@@ -30,7 +30,7 @@ export type interpolatePropertiesOptions = {
   callback?: (interpolations: { [key: string]: any }) => void
 }
 
-function buildConcatIfPresent(cond: AST.PathExpression | AST.SubExpression, concatParts: (AST.Expression | string)[]) {
+function buildConcatIfPresent(b: Syntax["builders"], cond: AST.PathExpression | AST.SubExpression, concatParts: (AST.Expression | string)[]) {
   let sanitizedConcatParts = concatParts.map((p) => typeof p === 'string' ? b.string(p) : p);
   return b.mustache(
     b.path('if'),
@@ -38,7 +38,7 @@ function buildConcatIfPresent(cond: AST.PathExpression | AST.SubExpression, conc
   );
 }
 
-export default function interpolateProperties(interpolation: string, { divisor = ':', skipIfMissing = true, skipIfMissingDynamic = false, callback }: interpolatePropertiesOptions = {}) {
+export default function interpolateProperties(b: Syntax["builders"], interpolation: string, { divisor = ':', skipIfMissing = true, skipIfMissingDynamic = false, callback }: interpolatePropertiesOptions = {}) {
   let parts = splitInterpolation(interpolation, divisor);
   return function _interpolate(this: BuildTimeComponent) {
     let concatParts: AppendableToAttrContent[] = [];
@@ -85,7 +85,7 @@ export default function interpolateProperties(interpolation: string, { divisor =
         let interpolation = interpolationsArray[0];
         if (typeof interpolation === 'object') {
           if (interpolation.type === 'PathExpression' || interpolation.type === 'SubExpression') {
-            return buildConcatIfPresent(interpolation, <(AST.Expression | string)[]>concatParts);
+            return buildConcatIfPresent(b, interpolation, <(AST.Expression | string)[]>concatParts);
           }
         }
       }

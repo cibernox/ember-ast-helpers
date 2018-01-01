@@ -1,13 +1,18 @@
 'use strict';
 
 import {
+  builders,
   traverse,
-  preprocess,
+  preprocess as parse,
   print,
   NodeVisitor,
   ASTPluginBuilder,
-  ASTPlugin
+  ASTPlugin,
+  Walker,
+  AST,
+  PreprocessOptions
 } from '@glimmer/syntax';
+
 
 function buildPlugin(visitor: NodeVisitor): ASTPlugin {
   return {
@@ -21,10 +26,11 @@ function plugin(plugin: ASTPlugin): ASTPluginBuilder {
 }
 
 export default function processTemplate(template: string, visitor: NodeVisitor) {
-  let newAst = preprocess(template, {
+  let newAst = parse(template, {
     plugins: {
       ast: [plugin(buildPlugin(visitor))]
     }
   });
   return print(newAst);
 }
+export const syntax = { builders, parse, print, traverse, Walker };;

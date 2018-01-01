@@ -1,12 +1,5 @@
 import { appendToAttrContent, buildAttr, BuildAttrContent } from './html';
-import {
-  builders as b,
-  traverse,
-  AST,
-  NodeVisitor,
-  preprocess,
-  print
-} from '@glimmer/syntax';
+import { NodeVisitor, AST, Syntax } from '@glimmer/syntax';
 
 function dashify(str: string): string {
   str = str.replace(/([a-z])([A-Z])/g, '$1-$2');
@@ -16,7 +9,7 @@ function dashify(str: string): string {
 };
 
 // TODO: Extract this helper to a public utility
-function buildConditional(cond: AST.PathExpression | AST.SubExpression, truthyValue: string, falsyValue: string | undefined): AST.MustacheStatement {
+function buildConditional(b: Syntax["builders"], cond: AST.PathExpression | AST.SubExpression, truthyValue: string, falsyValue: string | undefined): AST.MustacheStatement {
   let mustacheArgs : AST.Expression[]= [cond];
   mustacheArgs.push(b.string(truthyValue));
   if (falsyValue) {
@@ -73,6 +66,7 @@ type InvocationAttrsObject = { [key: string]: InvocationAttrsValue }
  */
 
 export default class BuildTimeComponent {
+  private syntax: Syntax
   private _defaultTagName: string = 'div'
   private _defaultClassNames: string[] = []
   private _defaultClassNameBindings: string[] = []
@@ -84,7 +78,8 @@ export default class BuildTimeComponent {
   options: Partial<BuildTimeComponentOptions>
   [key: string]: any
 
-  constructor(node: BuildTimeComponentNode, options: Partial<BuildTimeComponentOptions> = {}) {
+  constructor(syntax: Syntax, node: BuildTimeComponentNode, options: Partial<BuildTimeComponentOptions> = {}) {
+    this.syntax = syntax;
     this.node = node;
     this.options = options;
   }
@@ -158,17 +153,17 @@ export default class BuildTimeComponent {
   }
 
   layout(args: TemplateStringsArray) {
-    this._layout = preprocess(args[0]);
+    this._layout = this.syntax.parse(args[0]);
   }
 
   classContent(): BuildAttrContent | undefined {
     let content: AST.AttrNode['value'] | undefined;
     if (this.classNames.length > 0) {
-      content = appendToAttrContent(b, this.classNames.join(' '))
+      content = appendToAttrContent(this.syntax.builders, this.classNames.join(' '))
     }
     content = this._applyClassNameBindings(content);
     if (this.invocationAttrs.class !== undefined) {
-      content = appendToAttrContent(b, this.invocationAttrs.class, content);
+      content = appendToAttrContent(this.syntax.builders, this.invocationAttrs.class, content);
     }
     return content;
   }
@@ -228,7 +223,7 @@ export default class BuildTimeComponent {
           if (AST.isLiteral(invocationValue)) {
             content = invocationValue.value ? truthyValue : falsyValue;
           } else {
-            content = buildConditional(invocationValue, truthyValue, falsyValue)
+            content = buildConditional(this.syntax.builders, invocationValue, truthyValue, falsyValue)
           }
         } else {
           content = staticValue ? truthyValue : falsyValue;
@@ -236,7 +231,7 @@ export default class BuildTimeComponent {
       } else {
         content = computedValue || invocationValue || staticValue;
       }
-      let attr = buildAttr(b, <string>attrName, content);
+      let attr = buildAttr(this.syntax.builders, <string>attrName, content);
       if (attr !== null) {
         attrs.push(attr);
       }
@@ -251,7 +246,7 @@ export default class BuildTimeComponent {
   get elementChildren(): AST.Statement[] {
     if (this.node.type === 'BlockStatement') {
       if (this.contentVisitor) {
-        traverse(this.node.program, this.contentVisitor);
+        this.syntax.traverse(this.node.program, this.contentVisitor);
       }
       if (this._layout === undefined) {
         return this.node.program.body;
@@ -281,7 +276,7 @@ export default class BuildTimeComponent {
               }
             }
           } else {
-            traverse(node.program, nodeVisitor);
+            this.syntax.traverse(node.program, nodeVisitor);
           }
         },
         ElementNode: (node) => {
@@ -294,8 +289,8 @@ export default class BuildTimeComponent {
           }
         }
       };
-      traverse(this._layout, nodeVisitor);
-      traverse(this._layout, {
+      this.syntax.traverse(this._layout, nodeVisitor);
+      this.syntax.traverse(this._layout, {
         MustacheStatement: (node) => this._replaceYield(node)
       });
 
@@ -308,7 +303,7 @@ export default class BuildTimeComponent {
     if (this.tagName === '') {
       return this.elementChildren;
     }
-    return b.element(this.tagName, this.elementAttrs, this.elementModifiers, this.elementChildren);
+    return this.syntax.builders.element(this.tagName, this.elementAttrs, this.elementModifiers, this.elementChildren);
   }
 
   // private
@@ -358,22 +353,22 @@ export default class BuildTimeComponent {
         if (computedValue !== undefined) {
           let part = computedValue ? truthyValue : falsyValue;
           if (part) {
-            content = appendToAttrContent(b, part, content);
+            content = appendToAttrContent(this.syntax.builders, part, content);
           }
         } else if (invocationValue !== undefined) {
           if (AST.isLiteral(invocationValue)) {
             let part = invocationValue.value ? truthyValue : falsyValue;
             if (part) {
-              content = appendToAttrContent(b, part, content);
+              content = appendToAttrContent(this.syntax.builders, part, content);
             }
           } else {
-            content = appendToAttrContent(b, buildConditional(invocationValue, truthyValue, falsyValue), content)
+            content = appendToAttrContent(this.syntax.builders, buildConditional(this.syntax.builders, invocationValue, truthyValue, falsyValue), content)
           }
         } else {
-          content = appendToAttrContent(b, staticValue ? truthyValue : falsyValue, content);
+          content = appendToAttrContent(this.syntax.builders, staticValue ? truthyValue : falsyValue, content);
         }
       } else {
-        content = appendToAttrContent(b, computedValue || invocationValue || staticValue, content);
+        content = appendToAttrContent(this.syntax.builders, computedValue || invocationValue || staticValue, content);
       }
     });
     return content;
@@ -469,7 +464,7 @@ export default class BuildTimeComponent {
             previous.value.chars += propValue;
             node.attributes.splice(i, 1);
           } else {
-            node.attributes[i].value = b.text(String(propValue));
+            node.attributes[i].value = this.syntax.builders.text(String(propValue));
             i++;
           }
         } else if (AST.isLiteral(propValue)){
@@ -477,19 +472,19 @@ export default class BuildTimeComponent {
             node.attributes.splice(i, 1);
           } else if (propValue.type === 'BooleanLiteral') {
             if (propValue.value) {
-              attr.value = b.text('');
+              attr.value = this.syntax.builders.text('');
             } else {
               node.attributes.splice(i, 1);
             }
           } else if (propValue.type === 'StringLiteral' || propValue.type === 'NumberLiteral') {
-            node.attributes[i].value = b.text(String(propValue.value));
+            node.attributes[i].value = this.syntax.builders.text(String(propValue.value));
             i++;
           }
         } else if (propValue.type === 'PathExpression') {
-          node.attributes[i].value = b.mustache(propValue);
+          node.attributes[i].value = this.syntax.builders.mustache(propValue);
           i++;
         } else {
-          node.attributes[i].value = b.mustache(propValue.path, propValue.params, propValue.hash);
+          node.attributes[i].value = this.syntax.builders.mustache(propValue.path, propValue.params, propValue.hash);
           i++;
         }
       } else if (attr.value.type === 'ConcatStatement') {
@@ -539,13 +534,13 @@ export default class BuildTimeComponent {
       if (param.type === 'PathExpression') {
         let propValue: string | number | undefined | null | AST.Expression = this._getPropertyValue(param.original);
         if (propValue === undefined) {
-          node.params[i] = b.undefined()
+          node.params[i] = this.syntax.builders.undefined()
         } else if (propValue === null) {
-          node.params[i] = b.null();
+          node.params[i] = this.syntax.builders.null();
         } else if (typeof propValue === 'string') {
-          node.params[i] = b.string(propValue);
+          node.params[i] = this.syntax.builders.string(propValue);
         } else if (typeof propValue === 'number') {
-          node.params[i] = b.number(propValue);
+          node.params[i] = this.syntax.builders.number(propValue);
         } else {
           node.params[i] = propValue;
         }
@@ -559,13 +554,13 @@ export default class BuildTimeComponent {
       if (pair.value.type === 'PathExpression') {
         let propValue: string | number | undefined | null | AST.Expression = this._getPropertyValue(pair.value.original);
         if (propValue === undefined) {
-          pair.value = b.undefined()
+          pair.value = this.syntax.builders.undefined()
         } else if (propValue === null) {
-          pair.value = b.null();
+          pair.value = this.syntax.builders.null();
         } else if (typeof propValue === 'string') {
-          pair.value = b.string(propValue);
+          pair.value = this.syntax.builders.string(propValue);
         } else if (typeof propValue === 'number') {
-          pair.value = b.number(propValue);
+          pair.value = this.syntax.builders.number(propValue);
         } else {
           pair.value = propValue;
         }
@@ -601,7 +596,7 @@ export default class BuildTimeComponent {
         previous.chars += propValue;
         siblings.splice(i, 1);
       } else {
-        siblings[i] = b.text(String(propValue));
+        siblings[i] = this.syntax.builders.text(String(propValue));
         return true;
       }
     } else if (AST.isLiteral(propValue)){
@@ -612,15 +607,15 @@ export default class BuildTimeComponent {
           previous.chars += propValue.value;
           siblings.splice(i, 1);
         } else {
-          siblings[i] = b.text(String(propValue.value));
+          siblings[i] = this.syntax.builders.text(String(propValue.value));
           return true;
         }
       }
     } else if (propValue.type === 'PathExpression') {
-      siblings[i] = b.mustache(propValue);
+      siblings[i] = this.syntax.builders.mustache(propValue);
       return true;
     } else {
-      siblings[i] = b.mustache(propValue.path, propValue.params, propValue.hash);
+      siblings[i] = this.syntax.builders.mustache(propValue.path, propValue.params, propValue.hash);
       return true;
     }
     return false;
