@@ -1,8 +1,9 @@
-# ember-ast-helpers
+Note: This README is for version 0.3.x of the library! Although 0.4.x has been published to npm it is alpha and quite unstable. You may want to use 0.3.x for now.
+
+# Ember AST Helpers
 
 This library is a utility belt to make AST transforms and shield users as much as possible from
 the nuances of the AST, as it is still private API.
-
 
 
 ## Helpers
@@ -17,8 +18,10 @@ API.
 
 The basic usage is simple:
 ```js
+const { default: BuildTimeComponent } = require('ember-ast-helpers/build-time-component');
+
 let component = new BuildTimeComponent(node);
-component.toNode()
+component.toElement()
 ```
 
 This alone mimics the behaviour of `Ember.Component` in some ways:
@@ -35,7 +38,7 @@ let component = new BuildTimeComponent(node, {
   attributeBindings: ['title', 'ariaLabel:aria-label'],
   isActive: true
 });
-component.toNode()
+component.toElement()
 ```
 
 This will be smart enough to generate the appropriate transformations:
